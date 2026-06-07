@@ -1,0 +1,7 @@
+scenario,target_rate_pct,source_label,rule
+Current any-Yes label,,converted_any_yes,Use SQL any-Yes user label directly
+Stricter final-touch Yes label,,last_touch_yes,Use SQL final-touch Yes user label directly
+Downsampled current positives to 1%,1.0,converted_any_yes,Python samples SQL any-Yes positives to target rate
+Downsampled current positives to 3%,3.0,converted_any_yes,Python samples SQL any-Yes positives to target rate
+Downsampled current positives to 5%,5.0,converted_any_yes,Python samples SQL any-Yes positives to target rate
+Downsampled current positives to 10%,10.0,converted_any_yes,Python samples SQL any-Yes positives to target rate

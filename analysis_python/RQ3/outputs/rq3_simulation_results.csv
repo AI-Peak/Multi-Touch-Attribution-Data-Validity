@@ -1,0 +1,4 @@
+scenario,conversions,revenue,budget,revenue_per_conversion,delta_conversions_vs_s0,delta_revenue_vs_s0,delta_revenue_pct_vs_s0
+S0_equal,4943.089475,494308.947466,100000.0,100.0,0.0,0.0,0.0
+S1_row_conversion_rate_weighted,4944.086532,494408.653211,100000.0,100.0,0.997057,99.705744,0.020171
+S2_current_linear_attribution_weighted,4943.910554,494391.055399,100000.0,100.0,0.821079,82.107932,0.016611

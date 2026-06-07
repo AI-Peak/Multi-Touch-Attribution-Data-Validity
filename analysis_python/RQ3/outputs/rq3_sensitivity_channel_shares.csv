@@ -1,0 +1,37 @@
+scenario,channel,first_touch_pct,last_touch_pct,linear_pct
+Current any-Yes label,Direct Traffic,17.303654,17.849643,17.147272
+Current any-Yes label,Display Ads,17.97564,16.841663,17.100217
+Current any-Yes label,Email,15.665687,16.50567,16.283779
+Current any-Yes label,Referral,17.135657,16.127677,16.745273
+Current any-Yes label,Search Ads,15.581688,16.589668,16.024437
+Current any-Yes label,Social Media,16.337673,16.085678,16.699022
+Stricter final-touch Yes label,Direct Traffic,17.317246,16.749468,16.716882
+Stricter final-touch Yes label,Display Ads,17.601136,16.891412,17.130268
+Stricter final-touch Yes label,Email,15.755855,16.607523,16.135135
+Stricter final-touch Yes label,Referral,16.110717,17.74308,16.872036
+Stricter final-touch Yes label,Search Ads,15.755855,16.323634,16.12877
+Stricter final-touch Yes label,Social Media,17.459191,15.684883,17.016909
+Downsampled current positives to 1%,Direct Traffic,14.285714,17.857143,14.642857
+Downsampled current positives to 1%,Display Ads,25.0,25.0,25.297619
+Downsampled current positives to 1%,Email,10.714286,14.285714,13.333333
+Downsampled current positives to 1%,Referral,10.714286,10.714286,12.261905
+Downsampled current positives to 1%,Search Ads,0.0,10.714286,8.27381
+Downsampled current positives to 1%,Social Media,39.285714,21.428571,26.190476
+Downsampled current positives to 3%,Direct Traffic,16.470588,14.117647,15.461251
+Downsampled current positives to 3%,Display Ads,22.352941,16.470588,17.699346
+Downsampled current positives to 3%,Email,12.941176,14.117647,14.521008
+Downsampled current positives to 3%,Referral,18.823529,23.529412,22.518207
+Downsampled current positives to 3%,Search Ads,15.294118,18.823529,18.593838
+Downsampled current positives to 3%,Social Media,14.117647,12.941176,11.206349
+Downsampled current positives to 5%,Direct Traffic,15.492958,19.014085,16.020924
+Downsampled current positives to 5%,Display Ads,15.492958,14.084507,17.162775
+Downsampled current positives to 5%,Email,15.492958,18.309859,15.899844
+Downsampled current positives to 5%,Referral,14.084507,16.901408,16.499909
+Downsampled current positives to 5%,Search Ads,21.830986,14.788732,17.086153
+Downsampled current positives to 5%,Social Media,17.605634,16.901408,17.330397
+Downsampled current positives to 10%,Direct Traffic,15.087719,13.333333,15.792119
+Downsampled current positives to 10%,Display Ads,17.54386,16.140351,16.157338
+Downsampled current positives to 10%,Email,15.087719,18.245614,16.24631
+Downsampled current positives to 10%,Referral,20.701754,19.298246,16.507937
+Downsampled current positives to 10%,Search Ads,15.789474,15.087719,15.962267
+Downsampled current positives to 10%,Social Media,15.789474,17.894737,19.33403

@@ -1,0 +1,7 @@
+scenario,target_rate_pct,positive_users,positive_rate_pct,spearman_linear_share_vs_current,top_channel_linear,top_channel_linear_share_pct
+Current any-Yes label,,2381,83.631893,1.0,Direct Traffic,17.147272
+Stricter final-touch Yes label,,1409,49.490692,0.6,Display Ads,17.130268
+Downsampled current positives to 1%,1.0,28,0.983491,0.485714,Social Media,26.190476
+Downsampled current positives to 3%,3.0,85,2.985599,0.028571,Referral,22.518207
+Downsampled current positives to 5%,5.0,142,4.987706,-0.028571,Social Media,17.330397
+Downsampled current positives to 10%,10.0,285,10.010537,-0.257143,Social Media,19.33403

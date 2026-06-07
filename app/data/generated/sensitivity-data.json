@@ -1,0 +1,312 @@
+{
+  "rank_stability": [
+    {
+      "scenario": "Current any-Yes label",
+      "target_rate_pct": NaN,
+      "positive_users": 2381,
+      "positive_rate_pct": 83.631893,
+      "spearman_linear_share_vs_current": 1.0,
+      "top_channel_linear": "Direct Traffic",
+      "top_channel_linear_share_pct": 17.147272
+    },
+    {
+      "scenario": "Stricter final-touch Yes label",
+      "target_rate_pct": NaN,
+      "positive_users": 1409,
+      "positive_rate_pct": 49.490692,
+      "spearman_linear_share_vs_current": 0.6,
+      "top_channel_linear": "Display Ads",
+      "top_channel_linear_share_pct": 17.130268
+    },
+    {
+      "scenario": "Downsampled current positives to 1%",
+      "target_rate_pct": 1.0,
+      "positive_users": 28,
+      "positive_rate_pct": 0.983491,
+      "spearman_linear_share_vs_current": 0.485714,
+      "top_channel_linear": "Social Media",
+      "top_channel_linear_share_pct": 26.190476
+    },
+    {
+      "scenario": "Downsampled current positives to 3%",
+      "target_rate_pct": 3.0,
+      "positive_users": 85,
+      "positive_rate_pct": 2.985599,
+      "spearman_linear_share_vs_current": 0.028571,
+      "top_channel_linear": "Referral",
+      "top_channel_linear_share_pct": 22.518207
+    },
+    {
+      "scenario": "Downsampled current positives to 5%",
+      "target_rate_pct": 5.0,
+      "positive_users": 142,
+      "positive_rate_pct": 4.987706,
+      "spearman_linear_share_vs_current": -0.028571,
+      "top_channel_linear": "Social Media",
+      "top_channel_linear_share_pct": 17.330397
+    },
+    {
+      "scenario": "Downsampled current positives to 10%",
+      "target_rate_pct": 10.0,
+      "positive_users": 285,
+      "positive_rate_pct": 10.010537,
+      "spearman_linear_share_vs_current": -0.257143,
+      "top_channel_linear": "Social Media",
+      "top_channel_linear_share_pct": 19.33403
+    }
+  ],
+  "channel_shares": [
+    {
+      "scenario": "Current any-Yes label",
+      "channel": "Direct Traffic",
+      "first_touch_pct": 17.303654,
+      "last_touch_pct": 17.849643,
+      "linear_pct": 17.147272
+    },
+    {
+      "scenario": "Current any-Yes label",
+      "channel": "Display Ads",
+      "first_touch_pct": 17.97564,
+      "last_touch_pct": 16.841663,
+      "linear_pct": 17.100217
+    },
+    {
+      "scenario": "Current any-Yes label",
+      "channel": "Email",
+      "first_touch_pct": 15.665687,
+      "last_touch_pct": 16.50567,
+      "linear_pct": 16.283779
+    },
+    {
+      "scenario": "Current any-Yes label",
+      "channel": "Referral",
+      "first_touch_pct": 17.135657,
+      "last_touch_pct": 16.127677,
+      "linear_pct": 16.745273
+    },
+    {
+      "scenario": "Current any-Yes label",
+      "channel": "Search Ads",
+      "first_touch_pct": 15.581688,
+      "last_touch_pct": 16.589668,
+      "linear_pct": 16.024437
+    },
+    {
+      "scenario": "Current any-Yes label",
+      "channel": "Social Media",
+      "first_touch_pct": 16.337673,
+      "last_touch_pct": 16.085678,
+      "linear_pct": 16.699022
+    },
+    {
+      "scenario": "Stricter final-touch Yes label",
+      "channel": "Direct Traffic",
+      "first_touch_pct": 17.317246,
+      "last_touch_pct": 16.749468,
+      "linear_pct": 16.716882
+    },
+    {
+      "scenario": "Stricter final-touch Yes label",
+      "channel": "Display Ads",
+      "first_touch_pct": 17.601136,
+      "last_touch_pct": 16.891412,
+      "linear_pct": 17.130268
+    },
+    {
+      "scenario": "Stricter final-touch Yes label",
+      "channel": "Email",
+      "first_touch_pct": 15.755855,
+      "last_touch_pct": 16.607523,
+      "linear_pct": 16.135135
+    },
+    {
+      "scenario": "Stricter final-touch Yes label",
+      "channel": "Referral",
+      "first_touch_pct": 16.110717,
+      "last_touch_pct": 17.74308,
+      "linear_pct": 16.872036
+    },
+    {
+      "scenario": "Stricter final-touch Yes label",
+      "channel": "Search Ads",
+      "first_touch_pct": 15.755855,
+      "last_touch_pct": 16.323634,
+      "linear_pct": 16.12877
+    },
+    {
+      "scenario": "Stricter final-touch Yes label",
+      "channel": "Social Media",
+      "first_touch_pct": 17.459191,
+      "last_touch_pct": 15.684883,
+      "linear_pct": 17.016909
+    },
+    {
+      "scenario": "Downsampled current positives to 1%",
+      "channel": "Direct Traffic",
+      "first_touch_pct": 14.285714,
+      "last_touch_pct": 17.857143,
+      "linear_pct": 14.642857
+    },
+    {
+      "scenario": "Downsampled current positives to 1%",
+      "channel": "Display Ads",
+      "first_touch_pct": 25.0,
+      "last_touch_pct": 25.0,
+      "linear_pct": 25.297619
+    },
+    {
+      "scenario": "Downsampled current positives to 1%",
+      "channel": "Email",
+      "first_touch_pct": 10.714286,
+      "last_touch_pct": 14.285714,
+      "linear_pct": 13.333333
+    },
+    {
+      "scenario": "Downsampled current positives to 1%",
+      "channel": "Referral",
+      "first_touch_pct": 10.714286,
+      "last_touch_pct": 10.714286,
+      "linear_pct": 12.261905
+    },
+    {
+      "scenario": "Downsampled current positives to 1%",
+      "channel": "Search Ads",
+      "first_touch_pct": 0.0,
+      "last_touch_pct": 10.714286,
+      "linear_pct": 8.27381
+    },
+    {
+      "scenario": "Downsampled current positives to 1%",
+      "channel": "Social Media",
+      "first_touch_pct": 39.285714,
+      "last_touch_pct": 21.428571,
+      "linear_pct": 26.190476
+    },
+    {
+      "scenario": "Downsampled current positives to 3%",
+      "channel": "Direct Traffic",
+      "first_touch_pct": 16.470588,
+      "last_touch_pct": 14.117647,
+      "linear_pct": 15.461251
+    },
+    {
+      "scenario": "Downsampled current positives to 3%",
+      "channel": "Display Ads",
+      "first_touch_pct": 22.352941,
+      "last_touch_pct": 16.470588,
+      "linear_pct": 17.699346
+    },
+    {
+      "scenario": "Downsampled current positives to 3%",
+      "channel": "Email",
+      "first_touch_pct": 12.941176,
+      "last_touch_pct": 14.117647,
+      "linear_pct": 14.521008
+    },
+    {
+      "scenario": "Downsampled current positives to 3%",
+      "channel": "Referral",
+      "first_touch_pct": 18.823529,
+      "last_touch_pct": 23.529412,
+      "linear_pct": 22.518207
+    },
+    {
+      "scenario": "Downsampled current positives to 3%",
+      "channel": "Search Ads",
+      "first_touch_pct": 15.294118,
+      "last_touch_pct": 18.823529,
+      "linear_pct": 18.593838
+    },
+    {
+      "scenario": "Downsampled current positives to 3%",
+      "channel": "Social Media",
+      "first_touch_pct": 14.117647,
+      "last_touch_pct": 12.941176,
+      "linear_pct": 11.206349
+    },
+    {
+      "scenario": "Downsampled current positives to 5%",
+      "channel": "Direct Traffic",
+      "first_touch_pct": 15.492958,
+      "last_touch_pct": 19.014085,
+      "linear_pct": 16.020924
+    },
+    {
+      "scenario": "Downsampled current positives to 5%",
+      "channel": "Display Ads",
+      "first_touch_pct": 15.492958,
+      "last_touch_pct": 14.084507,
+      "linear_pct": 17.162775
+    },
+    {
+      "scenario": "Downsampled current positives to 5%",
+      "channel": "Email",
+      "first_touch_pct": 15.492958,
+      "last_touch_pct": 18.309859,
+      "linear_pct": 15.899844
+    },
+    {
+      "scenario": "Downsampled current positives to 5%",
+      "channel": "Referral",
+      "first_touch_pct": 14.084507,
+      "last_touch_pct": 16.901408,
+      "linear_pct": 16.499909
+    },
+    {
+      "scenario": "Downsampled current positives to 5%",
+      "channel": "Search Ads",
+      "first_touch_pct": 21.830986,
+      "last_touch_pct": 14.788732,
+      "linear_pct": 17.086153
+    },
+    {
+      "scenario": "Downsampled current positives to 5%",
+      "channel": "Social Media",
+      "first_touch_pct": 17.605634,
+      "last_touch_pct": 16.901408,
+      "linear_pct": 17.330397
+    },
+    {
+      "scenario": "Downsampled current positives to 10%",
+      "channel": "Direct Traffic",
+      "first_touch_pct": 15.087719,
+      "last_touch_pct": 13.333333,
+      "linear_pct": 15.792119
+    },
+    {
+      "scenario": "Downsampled current positives to 10%",
+      "channel": "Display Ads",
+      "first_touch_pct": 17.54386,
+      "last_touch_pct": 16.140351,
+      "linear_pct": 16.157338
+    },
+    {
+      "scenario": "Downsampled current positives to 10%",
+      "channel": "Email",
+      "first_touch_pct": 15.087719,
+      "last_touch_pct": 18.245614,
+      "linear_pct": 16.24631
+    },
+    {
+      "scenario": "Downsampled current positives to 10%",
+      "channel": "Referral",
+      "first_touch_pct": 20.701754,
+      "last_touch_pct": 19.298246,
+      "linear_pct": 16.507937
+    },
+    {
+      "scenario": "Downsampled current positives to 10%",
+      "channel": "Search Ads",
+      "first_touch_pct": 15.789474,
+      "last_touch_pct": 15.087719,
+      "linear_pct": 15.962267
+    },
+    {
+      "scenario": "Downsampled current positives to 10%",
+      "channel": "Social Media",
+      "first_touch_pct": 15.789474,
+      "last_touch_pct": 17.894737,
+      "linear_pct": 19.33403
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "simulation_results": [
+    {
+      "scenario": "S0_equal",
+      "conversions": 4943.089475,
+      "revenue": 494308.947466,
+      "budget": 100000.0,
+      "revenue_per_conversion": 100.0,
+      "delta_conversions_vs_s0": 0.0,
+      "delta_revenue_vs_s0": 0.0,
+      "delta_revenue_pct_vs_s0": 0.0
+    },
+    {
+      "scenario": "S1_row_conversion_rate_weighted",
+      "conversions": 4944.086532,
+      "revenue": 494408.653211,
+      "budget": 100000.0,
+      "revenue_per_conversion": 100.0,
+      "delta_conversions_vs_s0": 0.997057,
+      "delta_revenue_vs_s0": 99.705744,
+      "delta_revenue_pct_vs_s0": 0.020171
+    },
+    {
+      "scenario": "S2_current_linear_attribution_weighted",
+      "conversions": 4943.910554,
+      "revenue": 494391.055399,
+      "budget": 100000.0,
+      "revenue_per_conversion": 100.0,
+      "delta_conversions_vs_s0": 0.821079,
+      "delta_revenue_vs_s0": 82.107932,
+      "delta_revenue_pct_vs_s0": 0.016611
+    }
+  ]
+}

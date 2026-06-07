@@ -1,0 +1,385 @@
+{
+  "logistic_regression": {
+    "metrics": [
+      {
+        "model": "row_channel",
+        "n_obs": 10000,
+        "n_train": 7000,
+        "n_test": 3000,
+        "positive_rate_pct": 49.44,
+        "pseudo_r2_mcfadden": 0.000187,
+        "auc_test": 0.49018
+      },
+      {
+        "model": "user_any_channel",
+        "n_obs": 2847,
+        "n_train": 1992,
+        "n_test": 855,
+        "positive_rate_pct": 83.631893,
+        "pseudo_r2_mcfadden": 0.172002,
+        "auc_test": 0.721513
+      },
+      {
+        "model": "journey_length_only",
+        "n_obs": 2847,
+        "n_train": 1992,
+        "n_test": 855,
+        "positive_rate_pct": 83.631893,
+        "pseudo_r2_mcfadden": 0.188325,
+        "auc_test": 0.75488
+      },
+      {
+        "model": "channel_plus_length",
+        "n_obs": 2847,
+        "n_train": 1992,
+        "n_test": 855,
+        "positive_rate_pct": 83.631893,
+        "pseudo_r2_mcfadden": 0.196043,
+        "auc_test": 0.753551
+      }
+    ],
+    "coefficients": [
+      {
+        "model": "row_channel",
+        "term": "const",
+        "coef": 0.013378,
+        "odds_ratio": 1.013468,
+        "or_ci_low": 0.904863,
+        "or_ci_high": 1.135109,
+        "p_value": 0.817063
+      },
+      {
+        "model": "row_channel",
+        "term": "channel_display_ads",
+        "coef": -0.060525,
+        "odds_ratio": 0.94127,
+        "or_ci_low": 0.801623,
+        "or_ci_high": 1.105245,
+        "p_value": 0.460098
+      },
+      {
+        "model": "row_channel",
+        "term": "channel_email",
+        "coef": 0.013481,
+        "odds_ratio": 1.013572,
+        "or_ci_low": 0.861022,
+        "or_ci_high": 1.193151,
+        "p_value": 0.871317
+      },
+      {
+        "model": "row_channel",
+        "term": "channel_referral",
+        "coef": -0.071217,
+        "odds_ratio": 0.931259,
+        "or_ci_low": 0.792763,
+        "or_ci_high": 1.093951,
+        "p_value": 0.385994
+      },
+      {
+        "model": "row_channel",
+        "term": "channel_search_ads",
+        "coef": -0.062339,
+        "odds_ratio": 0.939564,
+        "or_ci_low": 0.798936,
+        "or_ci_high": 1.104946,
+        "p_value": 0.451102
+      },
+      {
+        "model": "row_channel",
+        "term": "channel_social_media",
+        "coef": -0.032039,
+        "odds_ratio": 0.968469,
+        "or_ci_low": 0.824549,
+        "or_ci_high": 1.13751,
+        "p_value": 0.696301
+      },
+      {
+        "model": "user_any_channel",
+        "term": "const",
+        "coef": -0.947566,
+        "odds_ratio": 0.387683,
+        "or_ci_low": 0.280817,
+        "or_ci_high": 0.535219,
+        "p_value": 0.0
+      },
+      {
+        "model": "user_any_channel",
+        "term": "channel_direct_traffic",
+        "coef": 1.08817,
+        "odds_ratio": 2.968836,
+        "or_ci_low": 2.23662,
+        "or_ci_high": 3.940762,
+        "p_value": 0.0
+      },
+      {
+        "model": "user_any_channel",
+        "term": "channel_display_ads",
+        "coef": 1.449825,
+        "odds_ratio": 4.26237,
+        "or_ci_low": 3.161941,
+        "or_ci_high": 5.745773,
+        "p_value": 0.0
+      },
+      {
+        "model": "user_any_channel",
+        "term": "channel_email",
+        "coef": 1.265214,
+        "odds_ratio": 3.54385,
+        "or_ci_low": 2.647596,
+        "or_ci_high": 4.743501,
+        "p_value": 0.0
+      },
+      {
+        "model": "user_any_channel",
+        "term": "channel_referral",
+        "coef": 1.069075,
+        "odds_ratio": 2.912685,
+        "or_ci_low": 2.196304,
+        "or_ci_high": 3.862731,
+        "p_value": 0.0
+      },
+      {
+        "model": "user_any_channel",
+        "term": "channel_search_ads",
+        "coef": 0.877262,
+        "odds_ratio": 2.404309,
+        "or_ci_low": 1.815601,
+        "or_ci_high": 3.183904,
+        "p_value": 0.0
+      },
+      {
+        "model": "user_any_channel",
+        "term": "channel_social_media",
+        "coef": 1.130385,
+        "odds_ratio": 3.096848,
+        "or_ci_low": 2.333567,
+        "or_ci_high": 4.109789,
+        "p_value": 0.0
+      },
+      {
+        "model": "journey_length_only",
+        "term": "const",
+        "coef": -0.807573,
+        "odds_ratio": 0.445939,
+        "or_ci_low": 0.332,
+        "or_ci_high": 0.59898,
+        "p_value": 0.0
+      },
+      {
+        "model": "journey_length_only",
+        "term": "n_touchpoints",
+        "coef": 0.874234,
+        "odds_ratio": 2.397039,
+        "or_ci_low": 2.135851,
+        "or_ci_high": 2.690167,
+        "p_value": 0.0
+      },
+      {
+        "model": "channel_plus_length",
+        "term": "const",
+        "coef": -0.97422,
+        "odds_ratio": 0.377487,
+        "or_ci_low": 0.27253,
+        "or_ci_high": 0.522864,
+        "p_value": 0.0
+      },
+      {
+        "model": "channel_plus_length",
+        "term": "channel_direct_traffic",
+        "coef": 0.304671,
+        "odds_ratio": 1.356179,
+        "or_ci_low": 0.932562,
+        "or_ci_high": 1.972225,
+        "p_value": 0.110812
+      },
+      {
+        "model": "channel_plus_length",
+        "term": "channel_display_ads",
+        "coef": 0.646439,
+        "odds_ratio": 1.908732,
+        "or_ci_low": 1.292735,
+        "or_ci_high": 2.818256,
+        "p_value": 0.001148
+      },
+      {
+        "model": "channel_plus_length",
+        "term": "channel_email",
+        "coef": 0.437459,
+        "odds_ratio": 1.548767,
+        "or_ci_low": 1.048583,
+        "or_ci_high": 2.287545,
+        "p_value": 0.027923
+      },
+      {
+        "model": "channel_plus_length",
+        "term": "channel_referral",
+        "coef": 0.294998,
+        "odds_ratio": 1.343124,
+        "or_ci_low": 0.925462,
+        "or_ci_high": 1.949278,
+        "p_value": 0.120581
+      },
+      {
+        "model": "channel_plus_length",
+        "term": "channel_search_ads",
+        "coef": 0.095664,
+        "odds_ratio": 1.100389,
+        "or_ci_low": 0.757117,
+        "or_ci_high": 1.599299,
+        "p_value": 0.616046
+      },
+      {
+        "model": "channel_plus_length",
+        "term": "channel_social_media",
+        "coef": 0.353122,
+        "odds_ratio": 1.423504,
+        "or_ci_low": 0.979336,
+        "or_ci_high": 2.06912,
+        "p_value": 0.064236
+      },
+      {
+        "model": "channel_plus_length",
+        "term": "n_touchpoints",
+        "coef": 0.647849,
+        "odds_ratio": 1.911425,
+        "or_ci_low": 1.543151,
+        "or_ci_high": 2.367587,
+        "p_value": 0.0
+      }
+    ],
+    "adjusted_share": [
+      {
+        "channel": "Direct Traffic",
+        "logistic_adjusted_share_pct": 15.622928,
+        "coef": 0.304671,
+        "odds_ratio": 1.356179,
+        "p_value": 0.110812
+      },
+      {
+        "channel": "Display Ads",
+        "logistic_adjusted_share_pct": 21.988236,
+        "coef": 0.646439,
+        "odds_ratio": 1.908732,
+        "p_value": 0.001148
+      },
+      {
+        "channel": "Email",
+        "logistic_adjusted_share_pct": 17.841507,
+        "coef": 0.437459,
+        "odds_ratio": 1.548767,
+        "p_value": 0.027923
+      },
+      {
+        "channel": "Referral",
+        "logistic_adjusted_share_pct": 15.472536,
+        "coef": 0.294998,
+        "odds_ratio": 1.343124,
+        "p_value": 0.120581
+      },
+      {
+        "channel": "Search Ads",
+        "logistic_adjusted_share_pct": 12.676281,
+        "coef": 0.095664,
+        "odds_ratio": 1.100389,
+        "p_value": 0.616046
+      },
+      {
+        "channel": "Social Media",
+        "logistic_adjusted_share_pct": 16.398512,
+        "coef": 0.353122,
+        "odds_ratio": 1.423504,
+        "p_value": 0.064236
+      }
+    ]
+  },
+  "markov_chain": {
+    "removal_effects": [
+      {
+        "channel": "Direct Traffic",
+        "baseline_conversion_probability": 0.836319,
+        "probability_without_channel": 0.836429,
+        "removal_effect": -0.00011,
+        "positive_removal_effect": 0.0,
+        "markov_positive_share_pct": 0.0
+      },
+      {
+        "channel": "Display Ads",
+        "baseline_conversion_probability": 0.836319,
+        "probability_without_channel": 0.835871,
+        "removal_effect": 0.000448,
+        "positive_removal_effect": 0.000448,
+        "markov_positive_share_pct": 76.056414
+      },
+      {
+        "channel": "Email",
+        "baseline_conversion_probability": 0.836319,
+        "probability_without_channel": 0.836506,
+        "removal_effect": -0.000187,
+        "positive_removal_effect": 0.0,
+        "markov_positive_share_pct": 0.0
+      },
+      {
+        "channel": "Referral",
+        "baseline_conversion_probability": 0.836319,
+        "probability_without_channel": 0.836178,
+        "removal_effect": 0.000141,
+        "positive_removal_effect": 0.000141,
+        "markov_positive_share_pct": 23.943586
+      },
+      {
+        "channel": "Search Ads",
+        "baseline_conversion_probability": 0.836319,
+        "probability_without_channel": 0.836556,
+        "removal_effect": -0.000237,
+        "positive_removal_effect": 0.0,
+        "markov_positive_share_pct": 0.0
+      },
+      {
+        "channel": "Social Media",
+        "baseline_conversion_probability": 0.836319,
+        "probability_without_channel": 0.83632,
+        "removal_effect": -1e-06,
+        "positive_removal_effect": 0.0,
+        "markov_positive_share_pct": 0.0
+      }
+    ],
+    "attribution_share": [
+      {
+        "channel": "Direct Traffic",
+        "markov_positive_share_pct": 0.0,
+        "removal_effect": -0.00011,
+        "positive_removal_effect": 0.0
+      },
+      {
+        "channel": "Display Ads",
+        "markov_positive_share_pct": 76.056414,
+        "removal_effect": 0.000448,
+        "positive_removal_effect": 0.000448
+      },
+      {
+        "channel": "Email",
+        "markov_positive_share_pct": 0.0,
+        "removal_effect": -0.000187,
+        "positive_removal_effect": 0.0
+      },
+      {
+        "channel": "Referral",
+        "markov_positive_share_pct": 23.943586,
+        "removal_effect": 0.000141,
+        "positive_removal_effect": 0.000141
+      },
+      {
+        "channel": "Search Ads",
+        "markov_positive_share_pct": 0.0,
+        "removal_effect": -0.000237,
+        "positive_removal_effect": 0.0
+      },
+      {
+        "channel": "Social Media",
+        "markov_positive_share_pct": 0.0,
+        "removal_effect": -1e-06,
+        "positive_removal_effect": 0.0
+      }
+    ]
+  }
+}

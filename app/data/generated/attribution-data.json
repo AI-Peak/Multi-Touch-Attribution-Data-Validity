@@ -1,0 +1,128 @@
+{
+  "sql_baseline": {
+    "attribution_baseline": [
+      {
+        "label_scenario": "any_yes",
+        "channel": "Direct Traffic",
+        "first_touch_pct": 17.303653926921463,
+        "last_touch_pct": 17.849643007139857,
+        "linear_pct": 17.14727220607103
+      },
+      {
+        "label_scenario": "any_yes",
+        "channel": "Display Ads",
+        "first_touch_pct": 17.975640487190255,
+        "last_touch_pct": 16.841663166736666,
+        "linear_pct": 17.10021708656736
+      },
+      {
+        "label_scenario": "any_yes",
+        "channel": "Email",
+        "first_touch_pct": 15.665686686266277,
+        "last_touch_pct": 16.505669886602266,
+        "linear_pct": 16.28377886987715
+      },
+      {
+        "label_scenario": "any_yes",
+        "channel": "Referral",
+        "first_touch_pct": 17.13565728685426,
+        "last_touch_pct": 16.12767744645107,
+        "linear_pct": 16.745272670304168
+      },
+      {
+        "label_scenario": "any_yes",
+        "channel": "Search Ads",
+        "first_touch_pct": 15.581688366232676,
+        "last_touch_pct": 16.589668206635867,
+        "linear_pct": 16.024437087015837
+      },
+      {
+        "label_scenario": "any_yes",
+        "channel": "Social Media",
+        "first_touch_pct": 16.33767324653507,
+        "last_touch_pct": 16.08567828643427,
+        "linear_pct": 16.699022080164454
+      },
+      {
+        "label_scenario": "last_touch_yes",
+        "channel": "Direct Traffic",
+        "first_touch_pct": 17.31724627395316,
+        "last_touch_pct": 16.74946770759404,
+        "linear_pct": 16.716882399990986
+      },
+      {
+        "label_scenario": "last_touch_yes",
+        "channel": "Display Ads",
+        "first_touch_pct": 17.601135557132718,
+        "last_touch_pct": 16.891412349183817,
+        "linear_pct": 17.13026800500186
+      },
+      {
+        "label_scenario": "last_touch_yes",
+        "channel": "Email",
+        "first_touch_pct": 15.755855216465578,
+        "last_touch_pct": 16.60752306600426,
+        "linear_pct": 16.135134678427796
+      },
+      {
+        "label_scenario": "last_touch_yes",
+        "channel": "Referral",
+        "first_touch_pct": 16.11071682044003,
+        "last_touch_pct": 17.7430801987225,
+        "linear_pct": 16.87203577906204
+      },
+      {
+        "label_scenario": "last_touch_yes",
+        "channel": "Search Ads",
+        "first_touch_pct": 15.755855216465578,
+        "last_touch_pct": 16.323633782824697,
+        "linear_pct": 16.128769700451745
+      },
+      {
+        "label_scenario": "last_touch_yes",
+        "channel": "Social Media",
+        "first_touch_pct": 17.459190915542937,
+        "last_touch_pct": 15.684882895670688,
+        "linear_pct": 17.016909437065575
+      }
+    ],
+    "channel_conversion_rates": [
+      {
+        "channel": "Direct Traffic",
+        "touchpoints": 1721,
+        "conversion_touchpoints": 853,
+        "conversion_rate_pct": 49.56420685647879
+      },
+      {
+        "channel": "Display Ads",
+        "touchpoints": 1669,
+        "conversion_touchpoints": 828,
+        "conversion_rate_pct": 49.61054523666866
+      },
+      {
+        "channel": "Email",
+        "touchpoints": 1654,
+        "conversion_touchpoints": 830,
+        "conversion_rate_pct": 50.1813784764208
+      },
+      {
+        "channel": "Referral",
+        "touchpoints": 1685,
+        "conversion_touchpoints": 841,
+        "conversion_rate_pct": 49.910979228486646
+      },
+      {
+        "channel": "Search Ads",
+        "touchpoints": 1609,
+        "conversion_touchpoints": 772,
+        "conversion_rate_pct": 47.98011187072716
+      },
+      {
+        "channel": "Social Media",
+        "touchpoints": 1662,
+        "conversion_touchpoints": 820,
+        "conversion_rate_pct": 49.338146811071
+      }
+    ]
+  }
+}

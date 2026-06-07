@@ -1,0 +1,7 @@
+channel,baseline_conversion_probability,probability_without_channel,removal_effect,positive_removal_effect,markov_positive_share_pct
+Direct Traffic,0.836319,0.836429,-0.00011,0.0,0.0
+Display Ads,0.836319,0.835871,0.000448,0.000448,76.056414
+Email,0.836319,0.836506,-0.000187,0.0,0.0
+Referral,0.836319,0.836178,0.000141,0.000141,23.943586
+Search Ads,0.836319,0.836556,-0.000237,0.0,0.0
+Social Media,0.836319,0.83632,-1e-06,0.0,0.0

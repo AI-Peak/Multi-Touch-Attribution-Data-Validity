@@ -1,0 +1,5 @@
+metric,count,pct_all_users,pct_converted_any_yes_users,interpretation
+users_with_multiple_yes_events,1474,51.77379697927643,61.90676186476271,Converted users with more than one row marked Yes.
+users_with_yes_before_last_touch,1938,68.07165437302423,81.39437211255775,A Yes event occurs before the journey terminates.
+users_with_last_touch_yes,1409,49.49069195644538,59.176816463670725,Users whose final observed touchpoint is Yes.
+converted_users_with_single_yes,907,31.858096241657886,38.09323813523729,Converted users with exactly one Yes event.

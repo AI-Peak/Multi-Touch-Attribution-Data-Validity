@@ -1,0 +1,7 @@
+label_scenario,comparison,spearman_rho
+any_yes,first_vs_last,0.428571
+any_yes,first_vs_linear,0.942857
+any_yes,last_vs_linear,0.485714
+last_touch_yes,first_vs_last,0.173931
+last_touch_yes,first_vs_linear,0.927634
+last_touch_yes,last_vs_linear,0.314286
