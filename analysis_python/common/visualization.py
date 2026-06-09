@@ -44,26 +44,33 @@ def _save(fig: plt.Figure, rq: str, filename: str) -> None:
 def plot_conversion_gap() -> None:
     rows = _read("RQ1/outputs", "rq1_benchmark_conversion_rates.csv")
     rows = rows[rows["source"].str.contains("Case-study|IRP|Shopify", case=False, regex=True)].copy()
-    rows["label"] = rows["source"].replace(
-        {
-            "Case-study raw touchpoint data": "Dataset row Yes rate",
-            "Case-study reconstructed user journeys": "Dataset user any-Yes rate",
-            "Case-study stricter journey label": "Dataset final-touch Yes rate",
-            "IRP Commerce Market Data": "IRP benchmark",
-            "Shopify retail conversion benchmark summary": "Shopify benchmark",
-        }
-    )
-    rows = rows.sort_values("rate_pct")
+    def label_row(row: pd.Series) -> str:
+        if row["source"] == "Case-study raw touchpoint data":
+            return "Dataset row Yes rate"
+        if row["source"] == "Case-study reconstructed user journeys":
+            return "Dataset user any-Yes rate"
+        if row["source"] == "Case-study stricter journey label":
+            return "Dataset final-touch Yes rate"
+        if row["source"] == "IRP Commerce Market Data":
+            return "IRP benchmark"
+        if row["source"] == "Shopify retail conversion benchmark summary":
+            return "Shopify benchmark (low)" if row["rate_pct"] < 2 else "Shopify benchmark (upper)"
+        return str(row["source"])
+
+    rows["label"] = rows.apply(label_row, axis=1)
+    rows = rows.sort_values("rate_pct").reset_index(drop=True)
+    y_pos = range(len(rows))
     colors = ["#5B7C99" if value < 10 else "#C94C4C" for value in rows["rate_pct"]]
     with plt.rc_context(STYLE):
         fig, ax = plt.subplots(figsize=(8.5, 4.8))
-        ax.barh(rows["label"], rows["rate_pct"], color=colors)
+        ax.barh(y_pos, rows["rate_pct"], color=colors)
+        ax.set_yticks(list(y_pos), rows["label"])
         ax.set_xlabel("Conversion rate (%)")
         ax.set_title("Observed Conversion Labels Are Far Above External Benchmarks")
         ax.grid(axis="x", color="#E1E5EA", linewidth=0.8)
         ax.set_xlim(0, max(rows["rate_pct"].max() * 1.12, 5))
-        for i, value in enumerate(rows["rate_pct"]):
-            ax.text(value + 1.0, i, f"{value:.2f}%", va="center", fontsize=9)
+        for y, value in zip(y_pos, rows["rate_pct"]):
+            ax.text(value + 1.0, y, f"{value:.2f}%", va="center", fontsize=9)
     _save(fig, "RQ1/outputs", "conversion_rate_gap.png")
 
 
