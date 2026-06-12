@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import type { Route } from "next";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { LayoutGroup, motion } from "framer-motion";
@@ -76,7 +76,7 @@ function rankMap(out: SimulatorOutputs): Map<Channel, number> {
   );
 }
 
-export default function RQ3Page() {
+function RQ3Content() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -491,5 +491,13 @@ export default function RQ3Page() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RQ3Page() {
+  return (
+    <Suspense fallback={<div className="page" />}>
+      <RQ3Content />
+    </Suspense>
   );
 }

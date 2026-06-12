@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import type { Route } from "next";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { PageHead } from "@/components/primitives/PageHead";
@@ -64,7 +64,7 @@ function readBenchmark(params: URLSearchParams): number {
   return Math.min(10, Math.max(1, raw));
 }
 
-export default function RQ1Page() {
+function RQ1Content() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -182,5 +182,13 @@ export default function RQ1Page() {
         </Callout>
       </div>
     </div>
+  );
+}
+
+export default function RQ1Page() {
+  return (
+    <Suspense fallback={<div className="page" />}>
+      <RQ1Content />
+    </Suspense>
   );
 }

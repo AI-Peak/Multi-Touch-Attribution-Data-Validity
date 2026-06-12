@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Route } from "next";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { PageHead } from "@/components/primitives/PageHead";
@@ -422,7 +422,7 @@ const diagnosticViews: ReadonlyArray<DiagnosticView> = [
   },
 ];
 
-export default function RQ2Page() {
+function RQ2Content() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -551,5 +551,13 @@ export default function RQ2Page() {
         </Callout>
       </div>
     </div>
+  );
+}
+
+export default function RQ2Page() {
+  return (
+    <Suspense fallback={<div className="page" />}>
+      <RQ2Content />
+    </Suspense>
   );
 }
