@@ -1,5 +1,24 @@
--- RQ2 SQL baseline: channel conversion rates and first/last/linear attribution.
--- These are baseline tables; Python analysis consumes them instead of recomputing them.
+-- RQ2 SQL: baseline attribution and user channel features.
+-- Depends on foundation tables (touchpoint_features, journey_features) created by rq1_data_audit.sql.
+-- Run order: rq1_data_audit.sql FIRST, then this file.
+
+DROP TABLE IF EXISTS rq2_user_channel_features;
+CREATE TABLE rq2_user_channel_features AS
+SELECT
+    user_id,
+    MAX(converted_any_yes) AS converted_any_yes,
+    MAX(last_touch_yes) AS last_touch_yes,
+    MAX(n_touchpoints) AS n_touchpoints,
+    MAX(CASE WHEN channel = 'Direct Traffic' THEN 1 ELSE 0 END) AS channel_direct_traffic,
+    MAX(CASE WHEN channel = 'Display Ads' THEN 1 ELSE 0 END) AS channel_display_ads,
+    MAX(CASE WHEN channel = 'Email' THEN 1 ELSE 0 END) AS channel_email,
+    MAX(CASE WHEN channel = 'Referral' THEN 1 ELSE 0 END) AS channel_referral,
+    MAX(CASE WHEN channel = 'Search Ads' THEN 1 ELSE 0 END) AS channel_search_ads,
+    MAX(CASE WHEN channel = 'Social Media' THEN 1 ELSE 0 END) AS channel_social_media
+FROM touchpoint_features
+GROUP BY user_id;
+
+
 
 DROP TABLE IF EXISTS channel_conversion_rates_base;
 CREATE TABLE channel_conversion_rates_base AS

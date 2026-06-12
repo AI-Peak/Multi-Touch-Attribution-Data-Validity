@@ -1,5 +1,5 @@
--- RQ1 SQL baseline: data preparation, journey construction, and label audit.
--- Python only loads raw CSV into raw_touchpoints; SQL owns the analytical datasets.
+-- RQ1 SQL audit: label validity and data quality checks.
+-- Defines foundation tables (touchpoint_features, journey_features) and then computes audit metrics.
 
 DROP TABLE IF EXISTS touchpoint_features;
 CREATE TABLE touchpoint_features AS
@@ -79,22 +79,6 @@ SELECT
 FROM touchpoint_features t
 JOIN sequences s ON t.user_id = s.user_id
 GROUP BY t.user_id, s.channel_sequence, s.all_campaigns_ordered;
-
-DROP TABLE IF EXISTS user_channel_features;
-CREATE TABLE user_channel_features AS
-SELECT
-    user_id,
-    MAX(converted_any_yes) AS converted_any_yes,
-    MAX(last_touch_yes) AS last_touch_yes,
-    MAX(n_touchpoints) AS n_touchpoints,
-    MAX(CASE WHEN channel = 'Direct Traffic' THEN 1 ELSE 0 END) AS channel_direct_traffic,
-    MAX(CASE WHEN channel = 'Display Ads' THEN 1 ELSE 0 END) AS channel_display_ads,
-    MAX(CASE WHEN channel = 'Email' THEN 1 ELSE 0 END) AS channel_email,
-    MAX(CASE WHEN channel = 'Referral' THEN 1 ELSE 0 END) AS channel_referral,
-    MAX(CASE WHEN channel = 'Search Ads' THEN 1 ELSE 0 END) AS channel_search_ads,
-    MAX(CASE WHEN channel = 'Social Media' THEN 1 ELSE 0 END) AS channel_social_media
-FROM touchpoint_features
-GROUP BY user_id;
 
 DROP TABLE IF EXISTS conversion_rate_base;
 CREATE TABLE conversion_rate_base AS
