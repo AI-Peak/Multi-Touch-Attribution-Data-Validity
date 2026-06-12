@@ -92,7 +92,7 @@ def _row_channel_matrix(touchpoints: pd.DataFrame) -> pd.DataFrame:
 
 def run() -> dict[str, pd.DataFrame]:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    touchpoints = _read_sql_output("rq123_touchpoint_features")
+    touchpoints = _read_sql_output("rq23_touchpoint_features")
     users = _read_sql_output("rq2_user_channel_features")
 
     coef_tables: list[pd.DataFrame] = []

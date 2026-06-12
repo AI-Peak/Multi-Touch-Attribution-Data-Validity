@@ -1,0 +1,300 @@
+\documentclass[pdflatex,sn-basic,Numbered]{sn-jnl}
+% To compile in standard double-column layout (which reduces page count to ~9-10 pages),
+% you can add the "iicol" option above: \documentclass[pdflatex,sn-basic,Numbered,iicol]{sn-jnl}
+
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{url}
+
+% Set the graphics path to search the images directory relative to main.tex
+\graphicspath{{images/}}
+
+\begin{document}
+
+\title[Validity Audit for Multi-Touch Attribution]{A Validity Audit of a Public Multi-Touch Attribution Dataset for E-commerce Campaign Analysis}
+
+\author*[1]{\fnm{Lam Huynh} \sur{Khang}}\email{khanglhse200666@fpt.edu.vn}
+\author[1]{\fnm{Phan Tuan} \sur{Dat}}\email{ptundatwork@gmail.com}
+\author[1]{\fnm{Nguyen Trong} \sur{Nhan}}\email{nhan@gmail.com}
+\affil*[1]{\orgdiv{Artificial Intelligence}, \orgname{FPT University}, \orgaddress{\city{Ho Chi Minh City}, \country{Vietnam}}}
+
+\abstract{
+Multi-touch attribution (MTA) is widely employed to assign conversion credit across marketing channels and optimize budgets. However, these models are only valid when conversion labels and journey datasets reflect true business dynamics. This study conducts a comprehensive validity audit of a public digital marketing dataset commonly used for MTA. The dataset contains 10,000 touchpoints across 2,847 user journeys and six channels. Under the standard ``any-Yes'' user-level aggregation rule, the dataset yields an inflated conversion rate of 83.63\%, far exceeding standard e-commerce benchmarks (1\% to 3\%). Our structural audit reveals that 61.91\% of converted users have multiple conversion events, and 81.39\% of journeys contain conversion events preceding the final touchpoint, violating the core MTA assumption of journey termination. Chi-square independence tests indicate a lack of touchpoint-level channel signal (p-value = 0.8598, Cramer's V = 0.0139). User-level predictive models show severe journey-length confounding; a logistic model using journey length alone achieves a Test AUC of 0.7549, whereas adding channel exposure provides no incremental performance (AUC = 0.7536). Furthermore, downsampling sensitivity tests indicate that channel rankings are highly unstable and fluctuate randomly under realistic conversion rate benchmarks (1\% to 3\%). A budget simulation reveals that optimizing budgets based on these models yields negligible differences (less than 0.02\% revenue delta). We present a diagnostic workflow to help future researchers and practitioners audit attribution datasets before deploying data-driven models.
+}
+
+\keywords{multi-touch attribution, data validity, label inflation, selection bias, e-commerce analytics, logistic regression, Markov chain, negative results}
+
+\maketitle
+
+\section{Introduction}\label{sec:intro}
+
+In the digital marketing landscape, evaluating advertising performance is complicated by the proliferation of touchpoints. Since consumers interact with multiple channels before converting, assigning credit is a major challenge. Historical single-touch heuristics, such as First-Touch or Last-Touch, are simple but ignore journey complexity, leading to skewed budget allocations \cite{shao2011mta,berman2018lasttouch}. Consequently, the industry has shifted to data-driven multi-touch attribution (DDMTA). DDMTA employs statistical methods, such as logistic regression \cite{shao2011mta} and Markov Chains \cite{anderl2016journey}, to estimate the marginal contribution of each channel and optimize return on investment (ROI) \cite{berman2018lasttouch,abhishek2012media}.
+
+However, a critical gap remains: the uncritical acceptance of conversion labels as ground truth. Most studies assume a conversion flags a clean, single purchase at the journey's end. In practice, data is often aggregated using an ``any-Yes'' rule, flagging a user as converted if they convert at least once in their history. This paper investigates the consequences of this rule on a public dataset of 10,000 touchpoints across 2,847 journeys. Under the default ``any-Yes'' rule, the conversion rate is 83.63\%, far exceeding typical e-commerce benchmarks of 1\% to 3\% \cite{irpcommerce2026,shopify2026conversion}. This disparity motivates a formal validity audit rather than a direct channel-winner interpretation.
+
+This research addresses three core research questions. Under RQ1 (Dataset Validity Audit), we evaluate what label anomalies arise from standard aggregation rules. Under RQ2 (Signal and Confounding Diagnosis), we seek empirical evidence of conversion-label bias, weak channel-level signals, or journey-length confounding. Finally, under RQ3 (Sensitivity and Safe Strategy), we measure how stable channel attribution rankings and budget allocations are under downsampled labels, and we propose a safer analysis workflow for future researchers.
+
+The main contribution of this study is a reproducible audit pipeline combining SQL-based data engineering with Python-based statistical diagnostics and machine learning. Rather than proposing a new optimization algorithm, we present a crucial negative finding: the dataset exhibits severe label inflation and lack of channel-level signal, making it unsuitable for direct budget recommendations. We advocate for a methodology-caution approach in marketing analytics.
+
+The remainder of the paper is organized as follows. Section \ref{sec:related} reviews the literature. Section \ref{sec:methodology} describes our pipeline and mathematical formulations. Section \ref{sec:results} presents the empirical results. Section \ref{sec:discussion} discusses the implications. Section \ref{sec:limitations} outlines limitations, and Section \ref{sec:conclusion} concludes.
+
+\section{Related Work}\label{sec:related}
+
+\subsection{Evolution of Attribution Modeling}
+
+Early single-touch attribution models were heavily influenced by technological constraints. Last-Touch attribution credits the final ad clicked, creating a moral hazard by incentivizing channels to target users already on the verge of converting, leading to wasteful spending on retargeting ads \cite{berman2018lasttouch}. Conversely, First-Touch attribution overvalues upper-funnel awareness campaigns while ignoring subsequent nurturing touchpoints.
+
+To overcome these biases, rule-based multi-touch models (Linear, Time-Decay, Position-Based) distribute credit across multiple touchpoints \cite{jayawardane2015review}. For instance, the Linear model assigns equal credit ($1/N$). Although a conceptual step forward, these rules remain subjective and fail to account for channel efficacy, order, or conversion probabilities.
+
+\subsection{Data-Driven Multi-Touch Attribution (DDMTA)}
+
+Data-driven approaches replace heuristic rules with statistical models. Shao and Li \cite{shao2011mta} introduced a logistic regression framework to model conversion as a binary outcome of channel exposure. Abhishek et al. \cite{abhishek2012media} expanded on this using survival analysis and Hawkes processes. Another class of DDMTA models uses Markov Chains. Anderl et al. \cite{anderl2016journey} formulated journeys as directed networks where touchpoints represent states and conversion or non-conversion represent absorbing states. The marginal contribution of a channel is determined by its ``removal effect''---the drop in conversion probability when all transitions through that channel are removed.
+
+\subsection{Data Validity and Selection Bias}
+
+Causal interpretation of DDMTA parameters requires strict assumptions. Rosenbaum and Rubin \cite{rosenbaum1983propensity} established the propensity score framework to control for selection bias in observational data. In marketing, selection bias occurs when high-intent users are naturally exposed to certain channels (e.g., Direct Traffic). Without controls, models overvalue these channels. Furthermore, Heckman \cite{heckman1979sample} showed that sample selection bias leads to biased estimates if the sample is non-representative. If the conversion label is inflated due to aggregation rules, the baseline probability rises, and the model's ability to distinguish channel performance is compromised.
+
+In Vietnam, the rapid growth of e-commerce platforms (Shopee, Lazada, Tiki) has accelerated multi-channel marketing campaigns. However, local applications rely on standard suites like Google Analytics 4 (GA4), which use black-box models. There is a lack of localized open-source research evaluating the mathematical robustness of these models on real-world transaction datasets. This study addresses this gap.
+
+\section{Methodology}\label{sec:methodology}
+
+\subsection{Layered Pipeline and SQL Feature Construction}
+
+To ensure reproducibility, the analytical pipeline is divided into a data engineering layer in SQL (SQLite) and an analysis/modeling layer in Python. The SQL layer processes the raw transaction database (10,000 records of touchpoints containing \texttt{user\_id}, \texttt{timestamp}, \texttt{channel}, \texttt{campaign}, and \texttt{conversion}), performs journey reconstruction, and exports two base tables: \texttt{clean\_touchpoints} and \texttt{journey\_features}. The transformations proceed as follows. First, chronological sorting ranks all touchpoints for each user using window functions:
+\begin{quote}
+\begin{small}
+\begin{tabular}{l}
+\texttt{SELECT user\_id, timestamp, channel, campaign, conversion,} \\
+\texttt{ROW\_NUMBER() OVER (PARTITION BY user\_id ORDER BY timestamp)} \\
+\texttt{AS rank\_in\_journey FROM clean\_touchpoints;}
+\end{tabular}
+\end{small}
+\end{quote}
+Second, journey reconstruction aggregates touchpoints at the user level to reconstruct the sequence of channel interactions as a path (e.g., \texttt{Direct > Social > Email}). Third, feature extraction computes first-touch, last-touch, journey length ($N_u$), number of conversions, and timing flags. Finally, linear weighting calculates a linear weight for each touchpoint as $1/N_u$.
+
+\subsection{Conversion Label Formulations}
+
+We formalize two user-level conversion labels. The first is the default \textbf{any-Yes} label, which classifies a user as converted ($Y^{any}_u = 1$) if they have at least one conversion event:
+\begin{equation}
+Y^{any}_u = I\left(\sum_{i=1}^{N_u} Conversion_{ui} > 0\right)
+\end{equation}
+where $Conversion_{ui} \in \{0, 1\}$ is the indicator for touchpoint $i$ of user $u$, and $N_u$ is journey length. The second is the stricter \textbf{final-touch Yes} label $Y^{last}_u$, which assumes a conversion event must terminate the journey:
+\begin{equation}
+Y^{last}_u = Conversion_{u, N_u}
+\end{equation}
+
+\subsection{Baseline Heuristic Models}
+
+Using the SQL-prepared tables, we compute baseline attribution shares for each channel under three rules. The First-Touch (FT) rule credits the first channel in the journey: $S^{FT}_c = \sum_{u: Y_u=1} I(Channel_{u,1} = c)$. The Last-Touch (LT) rule credits the final channel: $S^{LT}_c = \sum_{u: Y_u=1} I(Channel_{u,N_u} = c)$. The Linear (LN) rule distributes credit equally across all touchpoints in a converted journey: $S^{LN}_c = \sum_{u: Y_u=1} \frac{\sum_{i=1}^{N_u} I(Channel_{u,i} = c)}{N_u}$.
+
+\subsection{Data Validity Auditing (RQ1)}
+
+We conduct a four-stage validity audit. First, the database integrity check evaluates missing values, duplicate records, and basic parameters. Second, the conversion prevalence assessment calculates row-level and user-level conversion rates under both formulations. Third, the label-event structural audit analyzes the temporal order of conversion events to identify multiple or non-terminal conversions. Finally, the external benchmark comparison evaluates the observed rates against global retail benchmarks from IRP Commerce \cite{irpcommerce2026} and Shopify \cite{shopify2026conversion}.
+
+\subsection{Channel Signal and Confounding Analysis (RQ2)}
+
+To determine if channels associate with conversion, we run a chi-square test of independence at the touchpoint level on a $6 \times 2$ contingency table. The test statistic is:
+\noalign{\vskip3pt}
+\begin{equation}
+\chi^2 = \sum \frac{(O - E)^2}{E}
+\end{equation}
+To measure association strength, we compute Cramer's V:
+\begin{equation}
+V = \sqrt{\frac{\chi^2}{N \min(k-1, r-1)}} = \sqrt{\frac{\dots \chi^2}{N}}
+\end{equation}
+where $N = 10,000$, $k=6$, and $r=2$.
+
+To evaluate if journey length acts as a confounder, we fit four logistic regression specifications. The row-channel model predicts touchpoint-level conversion using the touchpoint's channel. The user-any-channel model predicts user-level conversion using binary channel exposure. The journey-length-only model predicts user-level conversion using journey length ($N_u$). Finally, the channel-plus-length model predicts user-level conversion using both channel exposure and journey length ($N_u$).
+
+The logistic regression model is:
+\begin{equation}
+\ln\left(\frac{P(Y_u=1 | X_u, N_u)}{1 - P(Y_u=1 | X_u, N_u)}\right) = \beta_0 + \sum_k \beta_k X_{uk} + \gamma N_u
+\end{equation}
+where $X_{uk} \in \{0, 1\}$ is channel exposure and $N_u$ is journey length. McFadden's pseudo-$R^2$ is defined as $R^2_{McFadden} = 1 - \ln L_{model} / \ln L_{null}$.
+
+Additionally, we estimate a first-order Markov Chain model over state space $S = \{\text{Start}, \text{Direct Traffic}, \text{Display Ads}, \text{Email}, \text{Referral}, \text{Search Ads}, \text{Social Media}, \text{Conversion}, \text{Null}\}$. The transition probability is $P_{ij} = C_{ij} / \sum_k C_{ik}$. For each channel $c$, we compute the \textbf{Removal Effect (RE)}:
+\begin{equation}
+RE_c = \frac{P(Conversion) - P(Conversion | \text{channel } c \text{ removed})}{P(Conversion)}
+\end{equation}
+
+\subsection{Sensitivity and Safe Strategy (RQ3)}
+
+To evaluate ranking stability, we downsample the conversion rate to target benchmarks $p \in \{0.01, 0.03, 0.05, 0.10\}$. We randomly sample converted users $U'_1 \subset U_1$ such that:
+\begin{equation}
+|U'_1| = \frac{p |U_0|}{1 - p}
+\end{equation}
+where $U_0$ is the set of non-converted users. Remaining converted users are reclassified as non-converted. We compute the Spearman rank correlation coefficient ($\rho_s$) between downsampled channel shares ($S^{LN, p}$) and baseline shares ($S^{LN, base}$):
+\begin{equation}
+\rho_s = 1 - \frac{6 \sum d_i^2}{n(n^2 - 1)}
+\end{equation}
+Finally, we run a budget simulation, allocating \$100,000 across channels under three strategies: Equal Split, Row-Level Weighted (by touchpoint conversion rates), and Linear-Attribution Weighted.
+
+\section{Results}\label{sec:results}
+
+\subsection{RQ1: Dataset Validity Audit}
+
+The database integrity check shows a clean structure with zero missing or duplicate records. However, the conversion prevalence metrics show severe inflation. The dataset contains 10,000 raw touchpoints across 2,847 unique users, with an average of 3.51 touchpoints per user. The row-level conversion rate is 49.44\%, meaning nearly half of all recorded touchpoints are marked as conversions. When aggregated using the standard user-level any-Yes rule, the conversion rate reaches 83.63\%. Even the stricter final-touch Yes definition yields a rate of 49.49\%.
+
+These rates are starkly higher than global benchmarks from IRP Commerce \cite{irpcommerce2026} and Shopify \cite{shopify2026conversion}, which typically report session-level conversion rates between 1.56\% and 3.00\%. A user-level conversion rate of 83.63\% represents a highly filtered sample (e.g., cart-abandonment tracking or post-purchase interactions) rather than standard acquisition journeys.
+
+A structural audit reveals that conversion events do not behave as terminal purchase events. Among the 2,381 any-Yes converted users, 61.91\% (1,474 users) have multiple conversion events, and 81.39\% (1,938 users) have a conversion event occurring before the final observed touchpoint. Only 59.18\% (1,409 users) convert at their final touchpoint. These patterns indicate that the conversion column tracks repeated user micro-conversions (such as email opens or page views) rather than unique purchases.
+
+\subsection{RQ2: Channel Signal and Confounding}
+
+Touchpoint-level conversion rates are nearly identical across channels, ranging from 47.98\% (Search Ads) to 50.18\% (Email). The chi-square test of independence between channel identity and touchpoint conversion yields a statistic of $\chi^2 = 1.9220$, a p-value of $0.8598$, and Cramer's V of $0.0139$. Because the p-value is far above the 0.05 threshold and Cramer's V is near zero, there is no statistically significant association between the exposed channel and the probability of conversion at the touchpoint level.
+
+The estimated Markov transition matrix is presented in Table \ref{tab:transitionmatrix}. From the START state, the transition probabilities to the six channels are approximately uniform (15.77\% to 17.28\%). Once within a journey, transitions between channels are highly symmetric, and the probability of transitioning directly from any channel to CONVERSION is nearly identical (ranging between 22.79\% for Referral and 24.69\% for Direct Traffic). The probability of transitioning to the NULL state from any channel is also uniform (between 4.01\% and 5.28\%). Because the transition graph is flat, removing any single channel has virtually no impact. The computed removal effects are extremely small (Table \ref{tab:logitcoefs}). Display Ads exhibits a removal effect of 0.000448, and Referral exhibits 0.000141. The removal effects for all other channels (Direct Traffic, Email, Search Ads, and Social Media) are zero or slightly negative, demonstrating that they provide no positive marginal contribution.
+
+The logistic regression model comparison reinforces this lack of signal. The row-channel model, which predicts conversion using only touchpoint channel identity, performs no better than random guessing (AUC 0.4902, McFadden $R^2$ 0.0002). The user-any-channel model achieves an AUC of 0.7215. However, the journey-length-only model, using only $N_u$, achieves an AUC of 0.7549. Combining exposure and length yields an AUC of 0.7536—providing no incremental predictive power.
+
+\begin{table}[htbp]
+\centering
+\caption{Estimated first-order transition probability matrix.}
+\label{tab:transitionmatrix}
+\begin{small}
+\begin{tabular}{l c c c c c c c c c}
+\toprule
+State & START & Direct & Display & Email & Referral & Search & Social & CONV & NULL \\
+\midrule
+START & 0.0000 & 0.1721 & 0.1728 & 0.1577 & 0.1707 & 0.1619 & 0.1647 & 0.0000 & 0.0000 \\
+Direct & 0.0000 & 0.1267 & 0.1156 & 0.1180 & 0.1092 & 0.1191 & 0.1145 & 0.2469 & 0.0500 \\
+Display & 0.0000 & 0.1150 & 0.1318 & 0.1240 & 0.1240 & 0.1150 & 0.1096 & 0.2403 & 0.0401 \\
+Email & 0.0000 & 0.1173 & 0.1149 & 0.1185 & 0.1161 & 0.1288 & 0.1173 & 0.2376 & 0.0496 \\
+Referral & 0.0000 & 0.1312 & 0.1270 & 0.1151 & 0.1122 & 0.1139 & 0.1306 & 0.2279 & 0.0421 \\
+Search & 0.0000 & 0.1249 & 0.1044 & 0.1224 & 0.1268 & 0.1019 & 0.1212 & 0.2455 & 0.0528 \\
+Social & 0.0000 & 0.1233 & 0.1119 & 0.1252 & 0.1318 & 0.1095 & 0.1227 & 0.2304 & 0.0451 \\
+CONV & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 1.0000 & 0.0000 \\
+NULL & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 0.0000 & 1.0000 \\
+\bottomrule
+\end{tabular}
+\end{small}
+\end{table}
+
+This is a classic demonstration of journey-length confounding. Because the any-Yes rule marks a journey as converted if *any* touchpoint is Yes, longer journeys naturally have a higher probability of conversion. The channels appear to have predictive power only because they act as proxies for journey length. Once we control for journey length, channel identity provides zero incremental predictive power.
+
+This confounding effect is formally validated by inspecting the regression parameters (Table \ref{tab:logitcoefs}). In the user-any-channel model where journey length is omitted, all channel indicators show positive, statistically significant coefficients (p-value = 0.0000). For instance, Display Ads displays a coefficient of 1.4498 (OR = 4.2624). However, when journey length ($N_u$) is added in the channel-plus-length model, the coefficient for Display Ads drops to 0.6464 (OR = 1.9087). More importantly, the indicators for Direct Traffic (p-value = 0.1108), Referral (p-value = 0.1206), Search Ads (p-value = 0.6160), and Social Media (p-value = 0.0642) all lose statistical significance. This drop indicates that the positive associations in the unadjusted model were artifacts of journey length.
+
+\begin{table}[htbp]
+\centering
+\caption{Detailed Logistic Regression coefficients and Odds Ratios across models.}
+\label{tab:logitcoefs}
+\begin{small}
+\begin{tabular}{l l r r c r}
+\toprule
+Model & Parameter & Coefficient & Odds Ratio & 95\% CI & P-value \\
+\midrule
+\multirow{6}{*}{Row Channel} 
+ & Constant & 0.0134 & 1.0135 & [0.9049, 1.1351] & 0.8171 \\
+ & Display Ads & -0.0605 & 0.9413 & [0.8016, 1.1052] & 0.4601 \\
+ & Email & 0.0135 & 1.0136 & [0.8610, 1.1932] & 0.8713 \\
+ & Referral & -0.0712 & 0.9313 & [0.7928, 1.0940] & 0.3860 \\
+ & Search Ads & -0.0623 & 0.9396 & [0.7989, 1.1049] & 0.4511 \\
+ & Social Media & -0.0320 & 0.9685 & [0.8245, 1.1375] & 0.6963 \\
+\midrule
+\multirow{7}{*}{User Any-Channel} 
+ & Constant & -0.9476 & 0.3877 & [0.2808, 0.5352] & 0.0000 \\
+ & Direct Traffic & 1.0882 & 2.9688 & [2.2366, 3.9408] & 0.0000 \\
+ & Display Ads & 1.4498 & 4.2624 & [3.1619, 5.7458] & 0.0000 \\
+ & Email & 1.2652 & 3.5439 & [2.6476, 4.7435] & 0.0000 \\
+ & Referral & 1.0691 & 2.9127 & [2.1963, 3.8627] & 0.0000 \\
+ & Search Ads & 0.8773 & 2.4043 & [1.8156, 3.1839] & 0.0000 \\
+ & Social Media & 1.1304 & 3.0968 & [2.3336, 4.1098] & 0.0000 \\
+\midrule
+\multirow{2}{*}{Journey Length Only} 
+ & Constant & -0.8076 & 0.4459 & [0.3320, 0.5990] & 0.0000 \\
+ & Journey Length ($N_u$) & 0.8742 & 2.3970 & [2.1359, 2.6902] & 0.0000 \\
+\midrule
+\multirow{8}{*}{Channel Plus Length} 
+ & Constant & -0.9742 & 0.3775 & [0.2725, 0.5229] & 0.0000 \\
+ & Direct Traffic & 0.3047 & 1.3562 & [0.9326, 1.9722] & 0.1108 \\
+ & Display Ads & 0.6464 & 1.9087 & [1.2927, 2.8183] & 0.0011 \\
+ & Email & 0.4375 & 1.5488 & [1.0486, 2.2875] & 0.0279 \\
+ & Referral & 0.2950 & 1.3431 & [0.9255, 1.9493] & 0.1206 \\
+ & Search Ads & 0.0957 & 1.1004 & [0.7571, 1.5993] & 0.6160 \\
+ & Social Media & 0.3531 & 1.4235 & [0.9793, 2.0691] & 0.0642 \\
+ & Journey Length ($N_u$) & 0.6478 & 1.9114 & [1.5432, 2.3676] & 0.0000 \\
+\bottomrule
+\end{tabular}
+\end{small}
+\end{table}
+
+\subsection{RQ3: Sensitivity and Safe Strategy}
+
+Sensitivity analysis demonstrates that channel attribution rankings are highly unstable and change dramatically depending on the conversion rate and label definition. Table \ref{tab:sensitivity} presents the Spearman rank correlation coefficients between the baseline any-Yes linear attribution ranking and alternative scenarios.
+
+\begin{table}[htbp]
+\centering
+\caption{Sensitivity of linear-attribution ranking under alternative labels.}
+\label{tab:sensitivity}
+\begin{tabular}{l r r l}
+\toprule
+Scenario & Positive rate & Spearman vs current & Top linear channel \\
+\midrule
+Current any-Yes label & 83.63\% & 1.0000 & Direct Traffic \\
+Final-touch Yes label & 49.49\% & 0.6000 & Display Ads \\
+Downsampled to 1\% & 0.98\% & 0.4857 & Social Media \\
+Downsampled to 3\% & 2.99\% & 0.0286 & Referral \\
+Downsampled to 5\% & 4.99\% & -0.0286 & Social Media \\
+Downsampled to 10\% & 10.01\% & -0.2571 & Social Media \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Under the baseline any-Yes label, Direct Traffic is ranked as the top channel. When we switch to the final-touch Yes label, the top channel changes to Display Ads, and the Spearman rank correlation drops to 0.60. Under the downsampled scenarios, the rankings fluctuate wildly. At a 1\% target conversion rate, the Spearman correlation is 0.4857, and Social Media becomes the top channel. At a 3\% target rate, the correlation drops to 0.0286 (near zero), and Referral becomes the top channel. At 5\% and 10\% target rates, the Spearman correlations become negative (-0.0286 and -0.2571, respectively), with Social Media reclaiming the top spot. The lack of rank correlation indicates that the baseline attribution rankings are artifacts of label inflation and noise. When the conversion rate is brought in line with realistic benchmarks, the channel rankings shift completely, demonstrating that the model's outputs are unstable and cannot support strategic decisions.
+
+The budget simulation further underscores this point (Table \ref{tab:simulation}). Allocating a \$100,000 budget across the channels yields almost identical results across all three strategies. The Equal Split strategy (S0) results in 4,943.09 simulated conversions. The Row-Level Weighted strategy (S1) yields 4,944.09 conversions, representing an increase of just 1.00 conversion (a 0.0202\% revenue increase). The Linear-Attribution Weighted strategy (S2) yields 4,943.91 conversions, which represents an increase of 0.82 conversions (a 0.0166\% revenue increase). These differences are negligible. Because the conversion rates are flat and the channels lack distinct predictive signals, optimizing budget allocation using these models provides no meaningful business value.
+
+\begin{table}[htbp]
+\centering
+\caption{Budget allocation simulation results across three strategies.}
+\label{tab:simulation}
+\begin{tabular}{l c c c c c}
+\toprule
+Strategy & Budget & Conversions & Revenue & Delta Conversions & Delta Revenue (\%) \\
+\midrule
+Equal Split (S0) & \$100,000 & 4943.09 & \$494,308.95 & 0.00 & 0.0000\% \\
+Row-Level Weighted (S1) & \$100,000 & 4944.09 & \$494,408.65 & +0.997 & +0.0202\% \\
+Linear Weighted (S2) & \$100,000 & 4943.91 & \$494,391.06 & +0.821 & +0.0166\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\linewidth]{safe_analysis_flow.png}
+\caption{Recommended safe workflow: audit labels and denominators before making direct channel-winner claims.}
+\label{fig:safeflow}
+\end{figure}
+
+Given these results, we recommend a safer analysis workflow for future researchers and practitioners working with marketing attribution datasets (Figure \ref{fig:safeflow}). Before applying DDMTA models, analysts should first perform a SQL audit to calculate user-level and touchpoint-level conversion rates and analyze the temporal structure of conversion events, checking specifically for repeated or non-terminal conversions. Second, statistical diagnostics should be conducted using a chi-square test of independence to verify the existence of a baseline channel signal. Third, model controls should be introduced by fitting logistic regression specifications both with and without journey length to detect journey-length confounding. Fourth, sensitivity downsampling should be performed by scaling the conversion rate down to realistic retail benchmarks (1\% to 3\%) and computing Spearman rank correlation coefficients to test ranking stability. Finally, analysts must practice cautious reporting: if the baseline signal is weak and the downsampled rankings are unstable, they should report the findings as a methodology caution rather than making confident budget optimization claims.
+
+\section{Discussion}\label{sec:discussion}
+
+The empirical findings of our audit have significant implications for marketing analytics. In practice, data-driven multi-touch attribution is often presented as a sophisticated optimization problem. Organizations invest heavily in proprietary MTA software and algorithms, assuming that the underlying transactional data is valid and that the conversion labels represent clean purchase outcomes.
+
+Our audit demonstrates that when the conversion label is aggregated using an ``any-Yes'' rule at the user level, the resulting dataset violates the basic structural assumptions of attribution models. Multi-touch attribution assumes that a user journey progresses through marketing touchpoints and terminates immediately upon conversion. When 81.39\% of converted users have marketing touchpoints *after* their first conversion, this assumption is violated. In such cases, the conversion column is likely tracking non-purchase micro-conversions (such as email clicks, newsletter signups, or page views) rather than macro-conversions (completed transactions). Applying standard MTA models to micro-conversions without adjusting the attribution logic leads to highly distorted results, as micro-conversions do not directly generate revenue.
+
+Furthermore, we show that the presence of journey-length confounding can easily lead to incorrect conclusions. A simple model might show that channels with high exposure in long journeys are associated with conversion. However, our logistic regression analysis shows that this association is entirely due to journey length. When a user has more touchpoints, their probability of having at least one ``Yes'' event increases purely by chance due to the any-Yes rule. This creates a feedback loop: channels that naturally appear frequently in long journeys (such as Email or Direct Traffic) receive disproportionate credit, not because they are effective, but because they are passive touchpoints in long paths.
+
+These findings highlight the danger of the ``black-box'' attribution models embedded in platforms like GA4. Without access to the underlying SQL sessionization logic, raw hit-level data, or denominator definitions, marketing managers risk allocating millions of dollars based on models that overfit on journey length or are highly sensitive to label noise. By reframing MTA as a diagnostic audit, this study provides a framework for analysts to stress-test their datasets and quantify model stability before making budget decisions.
+
+\section{Limitations}\label{sec:limitations}
+
+This study is subject to several limitations inherent in the audited dataset. Regarding the lack of metadata, the public dataset lacks critical campaign metadata, customer demographics, device types, geolocations, and tracking source details, meaning we cannot check if some channels were targeted at specific high-intent segments. Furthermore, the lack of financial context—including campaign spend, cost-per-click, cost-per-acquisition, or transaction revenue—means the budget simulation is a theoretical exercise rather than a financial optimization. Additionally, observational data limits prevent us from verifying causal relationships or measuring true incremental lift, which requires randomized controlled trials. Finally, benchmark generalizability is limited because session-level retail benchmarks from IRP Commerce and Shopify use different denominators and collection methods than the reconstructed user-level journeys in this dataset.
+
+\section{Conclusion and Future Work}\label{sec:conclusion}
+
+This study audited a public e-commerce multi-touch attribution dataset to evaluate its data validity and model stability. Our findings indicate that the dataset is not suitable for direct channel-winner claims or causal budget recommendations. The standard ``any-Yes'' aggregation rule results in an inflated user-level conversion rate of 83.63\%, and the majority of converted journeys contain repeated and non-terminal conversion events. Furthermore, touchpoint-level channel signal is statistically insignificant, and the predictive power of user-level models is driven by journey-length confounding. Sensitivity analysis confirms that channel attribution rankings are highly unstable and shift completely when conversion rates are downsampled to realistic retail benchmarks.
+
+For future work, researchers and practitioners should prioritize datasets that record distinct purchase identifiers, session boundaries, non-converted journeys, and channel cost structures. When working with public or observational datasets, analysts should adopt the validity audit framework proposed in this study. Reporting label-event diagnostics, chi-square signal tests, and downsampling sensitivity correlations should be standard practice before presenting any attribution model outputs or budget recommendations.
+
+\section*{Acknowledgements}
+
+The authors thank our mentor, Nguyen Hoang Linh, for guidance and feedback that motivated the pivot from direct attribution claims to a data-validity and methodology-caution contribution.
+
+\bibliography{sn-bibliography}
+
+\end{document}

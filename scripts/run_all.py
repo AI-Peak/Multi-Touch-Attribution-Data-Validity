@@ -59,7 +59,7 @@ def assert_reproducibility() -> None:
     assert abs(float(values.loc["user_any_yes_rate_pct"]) - 83.6319) < 0.05
     assert abs(float(values.loc["row_yes_rate_pct"]) - 49.44) < 0.05
 
-    channels = set(pd.read_csv(SQL_OUT / "rq2_channel_conversion_rates_base.csv")["channel"])
+    channels = set(pd.read_csv(SQL_OUT / "rq23_channel_conversion_rates_base.csv")["channel"])
     assert channels == {"Direct Traffic", "Display Ads", "Email", "Referral", "Search Ads", "Social Media"}
 
     model_metrics = pd.read_csv(LOGIT_OUT / "rq2_logistic_model_metrics.csv")

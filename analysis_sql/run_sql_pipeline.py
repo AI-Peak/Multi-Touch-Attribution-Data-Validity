@@ -19,17 +19,23 @@ SQL_FILES = [
 ]
 
 EXPORT_TABLES = {
-    "touchpoint_features": "rq123_touchpoint_features",
-    "journey_features": "rq123_journey_features",
-    "user_channel_features": "rq2_user_channel_features",
-    "conversion_rate_base": "rq1_conversion_rate_base",
-    "date_coverage_base": "rq1_date_coverage_base",
-    "label_event_audit_base": "rq1_label_event_audit_base",
-    "yes_event_distribution_base": "rq1_yes_event_distribution_base",
-    "channel_conversion_rates_base": "rq2_channel_conversion_rates_base",
-    "attribution_baseline": "rq2_attribution_baseline",
-    "sensitivity_base": "rq3_sensitivity_base",
-    "scenario_user_label_base": "rq3_scenario_user_label_base",
+    # rq1_data_audit.sql — used in RQ2+RQ3
+    "touchpoint_features":          "rq23_touchpoint_features",
+    # rq1_data_audit.sql — used in RQ1+RQ3
+    "journey_features":             "rq13_journey_features",
+    # rq1_data_audit.sql — RQ2 only (ML-ready pivot)
+    "user_channel_features":        "rq2_user_channel_features",
+    # rq1_data_audit.sql — RQ1 only
+    "conversion_rate_base":         "rq1_conversion_rate_base",
+    "date_coverage_base":           "rq1_date_coverage_base",
+    "label_event_audit_base":       "rq1_label_event_audit_base",
+    "yes_event_distribution_base":  "rq1_yes_event_distribution_base",
+    # rq2_attribution_baseline.sql — used in RQ2+RQ3
+    "channel_conversion_rates_base": "rq23_channel_conversion_rates_base",
+    "attribution_baseline":          "rq23_attribution_baseline",
+    # rq3_sensitivity_prep.sql — RQ3 only
+    "sensitivity_base":             "rq3_sensitivity_base",
+    "scenario_user_label_base":     "rq3_scenario_user_label_base",
 }
 
 

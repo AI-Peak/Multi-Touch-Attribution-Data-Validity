@@ -54,7 +54,7 @@ def _remove_channel(P: pd.DataFrame, channel: str) -> pd.DataFrame:
 
 def run() -> dict[str, pd.DataFrame]:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    journeys = _read_sql_output("rq123_journey_features")
+    journeys = _read_sql_output("rq13_journey_features")
     states = ["START"] + CHANNELS + ["CONVERSION", "NULL"]
     counts = pd.DataFrame(0.0, index=states, columns=states)
 

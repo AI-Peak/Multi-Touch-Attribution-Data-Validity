@@ -20,7 +20,7 @@ def run() -> dict[str, pd.DataFrame]:
     date_coverage = read_sql_output("rq1_date_coverage_base")
     label_audit = read_sql_output("rq1_label_event_audit_base")
     yes_distribution = read_sql_output("rq1_yes_event_distribution_base")
-    journeys = read_sql_output("rq123_journey_features")
+    journeys = read_sql_output("rq13_journey_features")
 
     summary = conversion.copy()
     summary["value"] = summary["value"].astype(object)
@@ -40,7 +40,7 @@ def run() -> dict[str, pd.DataFrame]:
                 "period": "2025-02-10 to 2025-02-11",
                 "rate_pct": row_yes_rate,
                 "denominator": "Yes touchpoints / all touchpoints",
-                "url": "data/sql_outputs/rq123_touchpoint_features.csv",
+                "url": "data/sql_outputs/rq23_touchpoint_features.csv",
                 "note": "SQL row-level label prevalence; not an e-commerce session purchase rate.",
             },
             {
@@ -48,7 +48,7 @@ def run() -> dict[str, pd.DataFrame]:
                 "period": "2025-02-10 to 2025-02-11",
                 "rate_pct": user_any_rate,
                 "denominator": "users with any Yes touchpoint / users",
-                "url": "data/sql_outputs/rq123_journey_features.csv",
+                "url": "data/sql_outputs/rq13_journey_features.csv",
                 "note": "Inflated by the SQL any-Yes label rule and not directly comparable to session-level e-commerce benchmarks.",
             },
             {
@@ -56,7 +56,7 @@ def run() -> dict[str, pd.DataFrame]:
                 "period": "2025-02-10 to 2025-02-11",
                 "rate_pct": user_last_rate,
                 "denominator": "users whose final touchpoint is Yes / users",
-                "url": "data/sql_outputs/rq123_journey_features.csv",
+                "url": "data/sql_outputs/rq13_journey_features.csv",
                 "note": "A stricter SQL-generated internal alternative, still much higher than external e-commerce purchase benchmarks.",
             },
         ]
