@@ -27,9 +27,9 @@ def _scenario_attribution(attribution: pd.DataFrame, scenario: str) -> pd.DataFr
 
 
 def run() -> dict[str, pd.DataFrame]:
-    touchpoints = read_sql_output("rq123_touchpoint_features")
-    channel_rates = read_sql_output("rq2_channel_conversion_rates_base").rename(columns={"channel": "Channel"})
-    attribution = read_sql_output("rq2_attribution_baseline")
+    touchpoints = read_sql_output("rq23_touchpoint_features")
+    channel_rates = read_sql_output("rq23_channel_conversion_rates_base").rename(columns={"channel": "Channel"})
+    attribution = read_sql_output("rq23_attribution_baseline")
 
     contingency = pd.crosstab(touchpoints["channel"], touchpoints["is_conversion"])
     chi2, p_value, dof, _ = chi2_contingency(contingency)

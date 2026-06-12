@@ -44,8 +44,8 @@ def main() -> None:
         "attribution-data.json",
         {
             "sql_baseline": {
-                "attribution_baseline": _csv(sql / "rq2_attribution_baseline.csv"),
-                "channel_conversion_rates": _csv(sql / "rq2_channel_conversion_rates_base.csv"),
+                "attribution_baseline": _csv(sql / "rq23_attribution_baseline.csv"),
+                "channel_conversion_rates": _csv(sql / "rq23_channel_conversion_rates_base.csv"),
             }
         },
     )
