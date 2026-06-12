@@ -84,7 +84,7 @@ def _simulation(channel_rates: pd.DataFrame, any_yes_attr: pd.DataFrame) -> pd.D
 
 
 def run() -> dict[str, pd.DataFrame]:
-    journeys = read_sql_output("rq13_journey_features")
+    journeys = read_sql_output("rq123_journey_features")
     touchpoints = read_sql_output("rq23_touchpoint_features")
     scenario_base = read_sql_output("rq3_sensitivity_base")
     attribution = read_sql_output("rq23_attribution_baseline")

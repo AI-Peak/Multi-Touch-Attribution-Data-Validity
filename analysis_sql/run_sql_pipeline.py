@@ -13,18 +13,18 @@ SQL_DIR = PROJECT_ROOT / "analysis_sql"
 SQL_OUTPUT_DIR = PROJECT_ROOT / "data" / "sql_outputs"
 
 SQL_FILES = [
-    "rq1_data_audit.sql",
-    "rq2_attribution_baseline.sql",
-    "rq3_sensitivity_prep.sql",
+    "rq1_data_audit.sql",             # Step 1: foundation tables + RQ1 audit tables
+    "rq2_attribution_baseline.sql",   # Step 2: RQ2 baseline attribution (depends on foundation from rq1)
+    "rq3_sensitivity_prep.sql",       # Step 3: RQ3 sensitivity scenarios
 ]
 
 EXPORT_TABLES = {
-    # rq1_data_audit.sql — used in RQ2+RQ3
+    # rq1_data_audit.sql — foundation tables used across RQ1+RQ2+RQ3
     "touchpoint_features":          "rq23_touchpoint_features",
-    # rq1_data_audit.sql — used in RQ1+RQ3
-    "journey_features":             "rq13_journey_features",
-    # rq1_data_audit.sql — RQ2 only (ML-ready pivot)
-    "user_channel_features":        "rq2_user_channel_features",
+    # rq1_data_audit.sql — used in RQ1+RQ2+RQ3
+    "journey_features":             "rq123_journey_features",
+    # rq2_attribution_baseline.sql — RQ2 only (ML-ready pivot)
+    "rq2_user_channel_features":    "rq2_user_channel_features",
     # rq1_data_audit.sql — RQ1 only
     "conversion_rate_base":         "rq1_conversion_rate_base",
     "date_coverage_base":           "rq1_date_coverage_base",
@@ -35,7 +35,6 @@ EXPORT_TABLES = {
     "attribution_baseline":          "rq23_attribution_baseline",
     # rq3_sensitivity_prep.sql — RQ3 only
     "sensitivity_base":             "rq3_sensitivity_base",
-    "scenario_user_label_base":     "rq3_scenario_user_label_base",
 }
 
 
