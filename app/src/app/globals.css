@@ -664,6 +664,9 @@ h1.display {
   letter-spacing: 0;
   overflow-wrap: anywhere;
 }
+.kpi-clusters .kpi-cluster:last-child .kpi-value.sm {
+  margin-top: 12px;
+}
 .kpi-cluster .kpi:last-child {
   border-right: none;
 }
