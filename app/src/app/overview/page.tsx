@@ -2,13 +2,12 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { PageHead } from "@/components/primitives/PageHead";
 import { Section } from "@/components/primitives/Section";
 import { KpiCard } from "@/components/primitives/KpiCard";
 import { ChartCard } from "@/components/primitives/ChartCard";
 import { Chip } from "@/components/primitives/Chip";
-import { EvidenceActions } from "@/components/primitives/EvidenceActions";
 import { BarChart } from "@/components/charts/BarChart";
 import { HBarChart } from "@/components/charts/HBarChart";
 import { CHART_TOKENS } from "@/components/charts/theme";
@@ -98,24 +97,13 @@ const DETAILS: Record<EvidenceKey, EvidenceDetail> = {
 
 export default function OverviewPage() {
   const [active, setActive] = useState<EvidenceKey>("label");
+  const [activeBar, setActiveBar] = useState<string | null>("User any-Yes");
   const detail = DETAILS[active];
-  const evidenceText = useMemo(
-    () =>
-      [
-        `${detail.eyebrow}: ${detail.title}`,
-        detail.desc,
-        ...detail.metrics.map(([metric, value, note]) => `${metric}: ${value} - ${note}`),
-      ].join("\n"),
-    [detail],
-  );
-  const evidenceCsv = useMemo(
-    () =>
-      [
-        "metric,value,note",
-        ...detail.metrics.map(([metric, value, note]) => `"${metric}","${value}","${note}"`),
-      ].join("\n"),
-    [detail],
-  );
+
+  function focusEvidence(next: EvidenceKey, bar: string | null = null) {
+    setActive(next);
+    setActiveBar(bar);
+  }
 
   const kpis: ReadonlyArray<{
     label: string;
@@ -182,7 +170,7 @@ export default function OverviewPage() {
             valueSmall={k.valueSmall}
             warn={k.warn}
             active={active === k.evidence}
-            onClick={() => setActive(k.evidence)}
+            onClick={() => focusEvidence(k.evidence, k.label)}
           />
         ))}
       </div>
@@ -223,12 +211,7 @@ export default function OverviewPage() {
             {detail.cta}
             <IconArrowR size={15} />
           </Link>
-          <EvidenceActions
-            copyText={evidenceText}
-            downloadText={evidenceCsv}
-            filename={`overview-${active}-evidence.csv`}
-            mime="text/csv;charset=utf-8"
-          />
+
         </div>
       </Section>
 
@@ -242,13 +225,15 @@ export default function OverviewPage() {
             caption="Observed rates vs. a typical e-commerce benchmark (3%)."
             tag="RQ1"
             active={active === "label"}
-            onClick={() => setActive("label")}
+            onClick={() => focusEvidence("label")}
           >
             <BarChart
               height={172}
               yMax={1}
               yFmt={(v) => `${Math.round(v * 100)}%`}
               threshold={{ value: 0.03, label: "3% benchmark" }}
+              activeLabel={active === "label" ? activeBar : null}
+              onDatumClick={(datum) => focusEvidence("label", datum.label)}
               data={[
                 { label: "Benchmark", value: 0.03, color: CHART_TOKENS.grey },
                 { label: "Row Yes", value: STUDY.rowYesRate, warn: true },
@@ -262,11 +247,13 @@ export default function OverviewPage() {
             caption="Where conversion labels concentrate across the journey."
             tag="RQ2"
             active={active === "label"}
-            onClick={() => setActive("label")}
+            onClick={() => focusEvidence("label")}
           >
             <HBarChart
               xMax={1}
               xFmt={(v) => `${Math.round(v * 100)}%`}
+              activeLabel={active === "label" ? activeBar : null}
+              onDatumClick={(datum) => focusEvidence("label", datum.label)}
               data={[
                 { label: "Row-level Yes", value: 0.4944, warn: true },
                 { label: "Final-touch Yes", value: 0.612 },
@@ -281,13 +268,15 @@ export default function OverviewPage() {
             caption="Predictive AUC: channel signal vs. journey-length signal."
             tag="RQ2"
             active={active === "signal"}
-            onClick={() => setActive("signal")}
+            onClick={() => focusEvidence("signal")}
           >
             <BarChart
               height={172}
               yMax={1}
               yFmt={(v) => v.toFixed(2)}
               threshold={{ value: 0.5, label: "chance" }}
+              activeLabel={active === "signal" ? activeBar : null}
+              onDatumClick={(datum) => focusEvidence("signal", datum.label)}
               data={[
                 { label: "Channel", value: STUDY.rowChannelAUC, warn: true },
                 { label: "Journey len", value: STUDY.jlenAUC, color: CHART_TOKENS.navy },
@@ -301,12 +290,14 @@ export default function OverviewPage() {
             caption="Attribution share for Email across 6 label scenarios."
             tag="RQ3"
             active={active === "sensitivity"}
-            onClick={() => setActive("sensitivity")}
+            onClick={() => focusEvidence("sensitivity")}
           >
             <BarChart
               height={172}
               yMax={0.3}
               yFmt={(v) => `${Math.round(v * 100)}%`}
+              activeLabel={active === "sensitivity" ? activeBar : null}
+              onDatumClick={(datum) => focusEvidence("sensitivity", datum.label)}
               data={[
                 { label: "As-lbl", value: 0.205 },
                 { label: "Final", value: 0.171 },

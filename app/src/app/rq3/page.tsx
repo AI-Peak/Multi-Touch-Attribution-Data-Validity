@@ -5,17 +5,21 @@ import type { Route } from "next";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { LayoutGroup, motion } from "framer-motion";
 import { PageHead } from "@/components/primitives/PageHead";
+import { PageSkeleton } from "@/components/primitives/PageSkeleton";
 import { Callout } from "@/components/primitives/Callout";
 import { Select } from "@/components/primitives/Select";
 import { NumberInput } from "@/components/primitives/NumberInput";
 import { RadioGroup } from "@/components/primitives/RadioGroup";
 import { StabilityBadge } from "@/components/primitives/StabilityBadge";
-import { Chip } from "@/components/primitives/Chip";
+import { Chip, type ChipKind } from "@/components/primitives/Chip";
 import { EvidenceActions } from "@/components/primitives/EvidenceActions";
+import { LineageButton } from "@/components/primitives/LineageButton";
 import {
   CHANNELS,
   LABEL_SCENARIOS,
   METHODS,
+  METHOD_STABILITY,
+  METHOD_WEIGHTS,
   type Channel,
   type Method,
 } from "@/lib/data/constants";
@@ -27,12 +31,25 @@ import {
 import {
   fmtInt,
   fmtMoney,
+  normalize,
   fmtSignedInt,
   fmtSignedMoney,
 } from "@/lib/format";
 
 type Mode = "auto" | "manual";
 type CompareState = "off" | "on";
+
+type RankCell = {
+  method: Method;
+  rank: number;
+  weight: number;
+};
+
+type RankHeatmapRow = {
+  channel: Channel;
+  cells: RankCell[];
+  spread: number;
+};
 
 const DEFAULT_MANUAL = [20, 10, 25, 15, 20, 10];
 
@@ -66,6 +83,43 @@ function readManual(params: URLSearchParams): number[] {
 function fmtPts(value: number) {
   const pts = value * 100;
   return `${pts > 0 ? "+" : ""}${pts.toFixed(1)} pts`;
+}
+
+function stabilityKind(score: number): ChipKind {
+  if (score >= 0.7) return "low";
+  if (score >= 0.3) return "medium";
+  return "high";
+}
+
+function rankBand(rank: number) {
+  if (rank <= 2) return "rank-top";
+  if (rank <= 4) return "rank-mid";
+  return "rank-low";
+}
+
+function spreadBand(spread: number) {
+  if (spread >= 3) return "rank-spread-high";
+  if (spread >= 2) return "rank-spread-mid";
+  return "rank-spread-low";
+}
+
+function rankWeights(methodName: Method): Map<Channel, { rank: number; weight: number }> {
+  const weights = normalize([...METHOD_WEIGHTS[methodName]]);
+  const sorted = CHANNELS.map((channel, index) => ({
+    channel,
+    weight: weights[index] ?? 0,
+  })).sort((a, b) => b.weight - a.weight);
+
+  let lastWeight = Number.NaN;
+  let lastRank = 1;
+  return new Map(
+    sorted.map((item, index) => {
+      const rank = Math.abs(item.weight - lastWeight) < 0.0001 ? lastRank : index + 1;
+      lastWeight = item.weight;
+      lastRank = rank;
+      return [item.channel, { rank, weight: item.weight }];
+    }),
+  );
 }
 
 function rankMap(out: SimulatorOutputs): Map<Channel, number> {
@@ -173,6 +227,21 @@ function RQ3Content() {
     }).sort((a, b) => Math.abs(b.shareDelta) - Math.abs(a.shareDelta));
   }, [compareOut, out, rev]);
 
+  const rankHeatmapRows = useMemo<RankHeatmapRow[]>(() => {
+    const ranks = new Map(METHODS.map((methodName) => [methodName, rankWeights(methodName)]));
+    return CHANNELS.map((channel) => {
+      const cells = METHODS.map((methodName) => {
+        const cell = ranks.get(methodName)?.get(channel) ?? { rank: 0, weight: 0 };
+        return { method: methodName, rank: cell.rank, weight: cell.weight };
+      });
+      const rankValues = cells.map((cell) => cell.rank).filter((rank) => rank > 0);
+      const spread = Math.max(...rankValues) - Math.min(...rankValues);
+      return { channel, cells, spread };
+    }).sort((a, b) => b.spread - a.spread);
+  }, []);
+
+  const mostVolatileRank = rankHeatmapRows[0] ?? null;
+
   const scenario = LABEL_SCENARIOS.find((s) => s.id === scenarioId) ?? LABEL_SCENARIOS[0]!;
   const compareScenario = LABEL_SCENARIOS.find((s) => s.id === compareScenarioId) ?? LABEL_SCENARIOS[0]!;
   const fallbackMove = useMemo(
@@ -235,6 +304,7 @@ function RQ3Content() {
     v > 0.5 ? "delta-up" : v < -0.5 ? "delta-down" : "delta-flat";
 
   const rankClass = (v: number) => (v > 0 ? "heat-up" : v < 0 ? "heat-down" : "heat-flat");
+  const activeStability = METHOD_STABILITY[method];
 
   return (
     <div className="page">
@@ -243,6 +313,7 @@ function RQ3Content() {
         title="Given the limitations, what analysis strategy is safer?"
         desc='A what-if diagnostic. Move the inputs to see how fragile any "allocation" becomes across attribution methods and label scenarios.'
       />
+
 
       <div className="split" style={{ marginTop: 18 }}>
         <div className="card card-pad" style={{ display: "flex", flexDirection: "column", gap: 15 }}>
@@ -356,7 +427,10 @@ function RQ3Content() {
           <div className="card">
             <div className="table-card-head">
               <span className="section-title">Budget allocation</span>
-              <StabilityBadge state={out.stabilityState} />
+              <div className="head-actions">
+                <LineageButton metricKey="attribution-allocation" tone="button">Lineage</LineageButton>
+                <StabilityBadge state={out.stabilityState} />
+              </div>
             </div>
             <table className="tbl">
               <thead>
@@ -409,6 +483,70 @@ function RQ3Content() {
             <div className="delta-card">
               <div className="d-label">Delta revenue vs. equal split</div>
               <div className={"d-value num " + dClass(out.deltaRevenue)}>{fmtSignedMoney(out.deltaRevenue)}</div>
+            </div>
+          </div>
+
+          <div className="card rank-heatmap-card">
+            <div className="table-card-head">
+              <span className="section-title">Rank stability heatmap</span>
+              <div className="head-actions">
+                <LineageButton metricKey="method-weights" tone="button">Lineage</LineageButton>
+                <Chip kind={stabilityKind(activeStability)}>
+                  {method} score {activeStability.toFixed(2)}
+                </Chip>
+              </div>
+            </div>
+            <div className="rank-heatmap-note">
+              Method columns are selectable. The spread column shows how far a channel moves across attribution assumptions.
+              {mostVolatileRank ? ` Most volatile: ${mostVolatileRank.channel}.` : ""}
+            </div>
+            <div className="rank-heatmap-scroll">
+              <table className="rank-heatmap">
+                <thead>
+                  <tr>
+                    <th>Channel</th>
+                    {METHODS.map((methodName) => (
+                      <th key={methodName}>
+                        <button
+                          className={methodName === method ? "active" : ""}
+                          onClick={() => setMethod(methodName)}
+                          type="button"
+                        >
+                          {methodName}
+                        </button>
+                      </th>
+                    ))}
+                    <th className="r">Spread</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rankHeatmapRows.map((row) => (
+                    <tr key={row.channel}>
+                      <td>{row.channel}</td>
+                      {row.cells.map((cell) => (
+                        <td key={cell.method}>
+                          <span
+                            className={[
+                              "rank-cell",
+                              rankBand(cell.rank),
+                              cell.method === method ? "active" : "",
+                              compare === "on" && cell.method === compareMethod ? "compare" : "",
+                            ].filter(Boolean).join(" ")}
+                          >
+                            <b>#{cell.rank}</b>
+                            <small>{(cell.weight * 100).toFixed(1)}%</small>
+                          </span>
+                        </td>
+                      ))}
+                      <td className="r">
+                        <span className={"rank-spread " + spreadBand(row.spread)}>
+                          {row.spread}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
 
@@ -496,7 +634,7 @@ function RQ3Content() {
 
 export default function RQ3Page() {
   return (
-    <Suspense fallback={<div className="page" />}>
+    <Suspense fallback={<PageSkeleton />}>
       <RQ3Content />
     </Suspense>
   );

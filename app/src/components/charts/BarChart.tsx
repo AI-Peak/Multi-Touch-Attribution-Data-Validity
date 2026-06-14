@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import type { CSSProperties, MouseEvent } from "react";
 import {
   BarChart as RBarChart,
   Bar,
@@ -31,6 +31,8 @@ export function BarChart({
   yFmt = (v) => String(v),
   threshold,
   baseColor = CHART_TOKENS.navy,
+  activeLabel,
+  onDatumClick,
 }: {
   data: BarDatum[];
   height?: number;
@@ -38,7 +40,12 @@ export function BarChart({
   yFmt?: (v: number) => string;
   threshold?: { value: number; label: string };
   baseColor?: string;
+  activeLabel?: string | null;
+  onDatumClick?: (datum: BarDatum, index: number) => void;
 }) {
+  const interactive = Boolean(onDatumClick);
+  const hasActiveLabel = activeLabel != null && data.some((d) => d.label === activeLabel);
+
   return (
     <div
       className="chart-stage"
@@ -76,10 +83,12 @@ export function BarChart({
             }}
             width={44}
           />
-          <Tooltip
-            cursor={{ fill: "rgba(30, 58, 95, 0.06)" }}
-            content={<ChartTooltip formatter={yFmt} />}
-          />
+          {!interactive ? (
+            <Tooltip
+              cursor={{ fill: "rgba(30, 58, 95, 0.06)" }}
+              content={<ChartTooltip formatter={yFmt} />}
+            />
+          ) : null}
           {threshold ? (
             <ReferenceLine
               y={threshold.value}
@@ -115,13 +124,26 @@ export function BarChart({
                 fill: CHART_TOKENS.text,
               }}
             />
-            {data.map((d, i) => (
-              <Cell
-                key={i}
-                fill={d.warn ? CHART_TOKENS.amber : d.color ?? baseColor}
-                fillOpacity={d.dim ? 0.42 : 1}
-              />
-            ))}
+            {data.map((d, i) => {
+              const active = activeLabel === d.label;
+              const dimmed = d.dim || (hasActiveLabel && !active);
+              return (
+                <Cell
+                  key={i}
+                  cursor={interactive ? "pointer" : undefined}
+                  fill={d.warn ? CHART_TOKENS.amber : d.color ?? baseColor}
+                  fillOpacity={dimmed ? 0.38 : 1}
+                  onClick={
+                    onDatumClick
+                      ? (event: MouseEvent<SVGElement>) => {
+                          event.stopPropagation();
+                          onDatumClick(d, i);
+                        }
+                      : undefined
+                  }
+                />
+              );
+            })}
           </Bar>
         </RBarChart>
       </ResponsiveContainer>

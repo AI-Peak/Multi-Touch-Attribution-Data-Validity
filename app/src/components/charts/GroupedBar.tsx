@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import type { CSSProperties, MouseEvent } from "react";
 import {
   BarChart as RBarChart,
   Bar,
@@ -11,9 +11,12 @@ import {
   Legend,
   LabelList,
   Tooltip,
+  Cell,
 } from "recharts";
 import { CHART_TOKENS } from "./theme";
 import { ChartTooltip } from "./Tooltip";
+
+export type GroupedBarGroup = { label: string };
 
 export function GroupedBar({
   groups,
@@ -21,18 +24,24 @@ export function GroupedBar({
   height = 200,
   yMax,
   yFmt = (v) => String(v),
+  activeLabel,
+  onGroupClick,
 }: {
-  groups: { label: string }[];
+  groups: GroupedBarGroup[];
   series: { name: string; color: string; values: number[] }[];
   height?: number;
   yMax?: number;
   yFmt?: (v: number) => string;
+  activeLabel?: string | null;
+  onGroupClick?: (group: GroupedBarGroup, index: number) => void;
 }) {
   const data = groups.map((g, gi) => {
     const row: Record<string, string | number> = { label: g.label };
     for (const s of series) row[s.name] = s.values[gi] ?? 0;
     return row;
   });
+  const interactive = Boolean(onGroupClick);
+  const hasActiveLabel = activeLabel != null && groups.some((g) => g.label === activeLabel);
 
   return (
     <div
@@ -80,10 +89,12 @@ export function GroupedBar({
             iconType="square"
             iconSize={10}
           />
-          <Tooltip
-            cursor={{ fill: "rgba(30, 58, 95, 0.06)" }}
-            content={<ChartTooltip formatter={yFmt} />}
-          />
+          {!interactive ? (
+            <Tooltip
+              cursor={{ fill: "rgba(30, 58, 95, 0.06)" }}
+              content={<ChartTooltip formatter={yFmt} />}
+            />
+          ) : null}
           {series.map((s) => (
             <Bar
               key={s.name}
@@ -106,6 +117,26 @@ export function GroupedBar({
                   fill: s.color,
                 }}
               />
+              {groups.map((g, index) => {
+                const active = activeLabel === g.label;
+                const dimmed = hasActiveLabel && !active;
+                return (
+                  <Cell
+                    key={`${s.name}-${g.label}`}
+                    cursor={interactive ? "pointer" : undefined}
+                    fill={s.color}
+                    fillOpacity={dimmed ? 0.38 : 1}
+                    onClick={
+                      onGroupClick
+                        ? (event: MouseEvent<SVGElement>) => {
+                            event.stopPropagation();
+                            onGroupClick(g, index);
+                          }
+                        : undefined
+                    }
+                  />
+                );
+              })}
             </Bar>
           ))}
         </RBarChart>
