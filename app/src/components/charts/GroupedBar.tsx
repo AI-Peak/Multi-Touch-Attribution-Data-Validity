@@ -15,8 +15,9 @@ import {
 } from "recharts";
 import { CHART_TOKENS } from "./theme";
 import { ChartTooltip } from "./Tooltip";
+import type { CFStatus } from "@/lib/crossfilter/context";
 
-export type GroupedBarGroup = { label: string };
+export type GroupedBarGroup = { label: string; cfKey?: string };
 
 export function GroupedBar({
   groups,
@@ -26,6 +27,7 @@ export function GroupedBar({
   yFmt = (v) => String(v),
   activeLabel,
   onGroupClick,
+  getGroupStatus,
 }: {
   groups: GroupedBarGroup[];
   series: { name: string; color: string; values: number[] }[];
@@ -34,6 +36,7 @@ export function GroupedBar({
   yFmt?: (v: number) => string;
   activeLabel?: string | null;
   onGroupClick?: (group: GroupedBarGroup, index: number) => void;
+  getGroupStatus?: (group: GroupedBarGroup, index: number) => CFStatus;
 }) {
   const data = groups.map((g, gi) => {
     const row: Record<string, string | number> = { label: g.label };
@@ -42,6 +45,9 @@ export function GroupedBar({
   });
   const interactive = Boolean(onGroupClick);
   const hasActiveLabel = activeLabel != null && groups.some((g) => g.label === activeLabel);
+  // Only mute non-matching groups when this chart actually contains a focused group.
+  const cfStatuses: CFStatus[] = groups.map((g, i) => (getGroupStatus ? getGroupStatus(g, i) : "idle"));
+  const anyChartFocus = cfStatuses.some((s) => s === "focus");
 
   return (
     <div
@@ -107,6 +113,7 @@ export function GroupedBar({
               <LabelList
                 dataKey={s.name}
                 position="top"
+                offset={9}
                 formatter={(v: unknown) =>
                   typeof v === "number" ? yFmt(v) : String(v)
                 }
@@ -115,17 +122,20 @@ export function GroupedBar({
                   fontSize: 9,
                   fontWeight: 600,
                   fill: s.color,
+                  stroke: "none",
                 }}
               />
               {groups.map((g, index) => {
                 const active = activeLabel === g.label;
-                const dimmed = hasActiveLabel && !active;
+                const cfDim = anyChartFocus && cfStatuses[index] !== "focus";
+                const dimmed = (hasActiveLabel && !active) || cfDim;
                 return (
                   <Cell
                     key={`${s.name}-${g.label}`}
                     cursor={interactive ? "pointer" : undefined}
                     fill={s.color}
-                    fillOpacity={dimmed ? 0.38 : 1}
+                    fillOpacity={dimmed ? 0.32 : 1}
+                    style={{ transition: "fill-opacity .16s" }}
                     onClick={
                       onGroupClick
                         ? (event: MouseEvent<SVGElement>) => {

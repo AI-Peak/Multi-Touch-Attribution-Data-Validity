@@ -1144,6 +1144,26 @@ table.tbl .row-total td {
   flex: 1 1 auto;
   min-height: 0;
 }
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.chart-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+.chart-legend-item i {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
 .chart-stage {
   width: 100%;
   height: max(var(--chart-height), var(--chart-min-height));
@@ -1765,6 +1785,100 @@ table.tbl .row-total td {
 }
 .tbl tr.cross-muted td {
   opacity: 0.5;
+}
+
+/* cross-filter: card-level highlight/mute */
+.kpi.cross-muted,
+.kpi-cluster.cross-muted,
+.chart-card.cross-muted,
+.drilldown-metric.cross-muted {
+  opacity: 0.4;
+  transition: opacity .16s;
+}
+.kpi.cross-focus,
+.kpi-cluster.cross-focus {
+  box-shadow: 0 0 0 2px var(--navy-300);
+  transition: box-shadow .16s, opacity .16s;
+}
+.chart-card.cross-focus {
+  border-color: var(--navy-300);
+  box-shadow: 0 0 0 2px var(--navy-tint);
+  transition: border-color .16s, box-shadow .16s;
+}
+.drilldown-metric.cross-focus {
+  border-color: var(--navy-300);
+  background: var(--navy-tint);
+  transition: border-color .16s, background .16s;
+}
+.rank-cell.cross-focus {
+  outline: 2px solid var(--navy-300);
+  outline-offset: -2px;
+}
+.rank-cell.cross-muted {
+  opacity: 0.3;
+  transition: opacity .16s;
+}
+
+/* Reset selection chip */
+.cf-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 4px 3px 9px;
+  border: 1px solid var(--navy-300);
+  border-radius: 99px;
+  background: var(--navy-tint);
+  color: var(--navy);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .12s, border-color .12s, box-shadow .12s;
+}
+.cf-reset:hover {
+  background: var(--navy-tint-2);
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px var(--navy-tint);
+}
+.cf-reset-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--navy);
+  flex: none;
+}
+.cf-reset-text {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  white-space: nowrap;
+}
+.cf-reset-eyebrow {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.cf-reset-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.cf-reset-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+  padding: 4px 9px;
+  border-radius: 99px;
+  background: var(--navy);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.cf-reset:hover .cf-reset-clear {
+  background: #16304f;
 }
 
 .drilldown-card {

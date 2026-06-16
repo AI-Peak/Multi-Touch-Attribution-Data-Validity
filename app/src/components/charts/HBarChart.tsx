@@ -14,12 +14,14 @@ import {
 } from "recharts";
 import { CHART_TOKENS } from "./theme";
 import { ChartTooltip } from "./Tooltip";
+import type { CFStatus } from "@/lib/crossfilter/context";
 
 export type HBarDatum = {
   label: string;
   value: number;
   warn?: boolean;
   color?: string;
+  cfKey?: string;
 };
 
 export function HBarChart({
@@ -31,6 +33,7 @@ export function HBarChart({
   labelWidth = 96,
   activeLabel,
   onDatumClick,
+  getStatus,
 }: {
   data: HBarDatum[];
   height?: number;
@@ -40,10 +43,14 @@ export function HBarChart({
   labelWidth?: number;
   activeLabel?: string | null;
   onDatumClick?: (datum: HBarDatum, index: number) => void;
+  getStatus?: (datum: HBarDatum, index: number) => CFStatus;
 }) {
   const h = height ?? data.length * 28 + 12;
   const interactive = Boolean(onDatumClick);
   const hasActiveLabel = activeLabel != null && data.some((d) => d.label === activeLabel);
+  // Only mute non-matching bars when this chart actually contains a focused bar.
+  const cfStatuses: CFStatus[] = data.map((d, i) => (getStatus ? getStatus(d, i) : "idle"));
+  const anyChartFocus = cfStatuses.some((s) => s === "focus");
 
   return (
     <div
@@ -101,17 +108,20 @@ export function HBarChart({
                 fontSize: 10,
                 fontWeight: 600,
                 fill: CHART_TOKENS.text,
+                stroke: "none",
               }}
             />
             {data.map((d, i) => {
               const active = activeLabel === d.label;
-              const dimmed = hasActiveLabel && !active;
+              const cfDim = anyChartFocus && cfStatuses[i] !== "focus";
+              const dimmed = (hasActiveLabel && !active) || cfDim;
               return (
                 <Cell
                   key={i}
                   cursor={interactive ? "pointer" : undefined}
                   fill={d.warn ? CHART_TOKENS.amber : d.color ?? baseColor}
-                  fillOpacity={dimmed ? 0.38 : 1}
+                  fillOpacity={dimmed ? 0.32 : 1}
+                  style={{ transition: "fill-opacity .16s" }}
                   onClick={
                     onDatumClick
                       ? (event: MouseEvent<SVGElement>) => {

@@ -9,6 +9,7 @@ export function KpiCard({
   warn,
   chip,
   active,
+  muted,
   onClick,
 }: {
   label: string;
@@ -18,13 +19,15 @@ export function KpiCard({
   warn?: boolean;
   chip?: ReactNode;
   active?: boolean;
+  muted?: boolean;
   onClick?: MouseEventHandler<HTMLButtonElement>;
 }) {
   const className =
     "kpi" +
     (warn ? " warn" : "") +
     (onClick ? " kpi-button" : "") +
-    (active ? " active" : "");
+    (active ? " active" : "") +
+    (muted ? " cross-muted" : "");
 
   const content = (
     <>

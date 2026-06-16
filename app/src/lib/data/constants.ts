@@ -5,9 +5,8 @@ export const PAGES = [
   { id: "rq1", idx: "02", label: "RQ1 · Validity Audit", href: "/rq1", tag: null },
   { id: "rq2", idx: "03", label: "RQ2 · Diagnostics", href: "/rq2", tag: null },
   { id: "rq3", idx: "04", label: "RQ3 · Simulator", href: "/rq3", tag: null },
-  { id: "assistant", idx: "05", label: "AI Assistant", href: "/assistant", tag: "beta" },
-  { id: "safe", idx: "06", label: "Safe Recommendation", href: "/safe", tag: null },
-  { id: "presentation", idx: "TV", label: "Presentation Mode", href: "/presentation", tag: "demo" },
+  { id: "safe", idx: "05", label: "Safe Recommendation", href: "/safe", tag: null },
+  { id: "assistant", idx: "06", label: "AI Assistant", href: "/assistant", tag: "beta" },
 ] as const;
 
 export type PageId = (typeof PAGES)[number]["id"];

@@ -14,6 +14,9 @@ import { StabilityBadge } from "@/components/primitives/StabilityBadge";
 import { Chip, type ChipKind } from "@/components/primitives/Chip";
 import { EvidenceActions } from "@/components/primitives/EvidenceActions";
 import { LineageButton } from "@/components/primitives/LineageButton";
+import { ResetSelection } from "@/components/primitives/ResetSelection";
+import { CrossFilterProvider, useCrossFilter } from "@/lib/crossfilter/context";
+import { RQ3_LINKS } from "@/lib/crossfilter/links";
 import {
   CHANNELS,
   LABEL_SCENARIOS,
@@ -130,9 +133,19 @@ function rankMap(out: SimulatorOutputs): Map<Channel, number> {
   );
 }
 
+const CHANNEL_CF_KEY: Record<string, string> = {
+  "Email": "ch-email",
+  "Search Ads": "ch-search",
+  "Direct Traffic": "ch-direct",
+  "Referral": "ch-referral",
+  "Social Media": "ch-social",
+  "Display Ads": "ch-display",
+};
+
 function RQ3Content() {
   const router = useRouter();
   const pathname = usePathname();
+  const cf = useCrossFilter();
   const searchParams = useSearchParams();
 
   const [budget, setBudget] = useState(() => readNumber(searchParams, "budget", 100000));
@@ -430,6 +443,7 @@ function RQ3Content() {
               <div className="head-actions">
                 <LineageButton metricKey="attribution-allocation" tone="button">Lineage</LineageButton>
                 <StabilityBadge state={out.stabilityState} />
+                <ResetSelection />
               </div>
             </div>
             <table className="tbl">
@@ -443,14 +457,24 @@ function RQ3Content() {
               </thead>
               <LayoutGroup>
                 <motion.tbody layout>
-                  {sortedRows.map((r) => (
-                    <motion.tr key={r.channel} layout transition={{ type: "tween", duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}>
-                      <td>{r.channel}</td>
-                      <td className="r num">{(r.weight * 100).toFixed(1)}%</td>
-                      <td className="r">{fmtMoney(r.allocation)}</td>
-                      <td className="r">{r.conversions.toFixed(1)}</td>
-                    </motion.tr>
-                  ))}
+                  {sortedRows.map((r) => {
+                    const cKey = CHANNEL_CF_KEY[r.channel];
+                    return (
+                      <motion.tr
+                        key={r.channel}
+                        layout
+                        transition={{ type: "tween", duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
+                        className={cf.cls(cKey)}
+                        style={{ cursor: cKey ? "pointer" : undefined }}
+                        onClick={() => { if (cKey) cf.select(cKey, r.channel); }}
+                      >
+                        <td>{r.channel}</td>
+                        <td className="r num">{(r.weight * 100).toFixed(1)}%</td>
+                        <td className="r">{fmtMoney(r.allocation)}</td>
+                        <td className="r">{r.conversions.toFixed(1)}</td>
+                      </motion.tr>
+                    );
+                  })}
                   <tr className="row-total">
                     <td>Total</td>
                     <td className="r num">100.0%</td>
@@ -520,31 +544,41 @@ function RQ3Content() {
                   </tr>
                 </thead>
                 <tbody>
-                  {rankHeatmapRows.map((row) => (
-                    <tr key={row.channel}>
-                      <td>{row.channel}</td>
-                      {row.cells.map((cell) => (
-                        <td key={cell.method}>
-                          <span
-                            className={[
-                              "rank-cell",
-                              rankBand(cell.rank),
-                              cell.method === method ? "active" : "",
-                              compare === "on" && cell.method === compareMethod ? "compare" : "",
-                            ].filter(Boolean).join(" ")}
-                          >
-                            <b>#{cell.rank}</b>
-                            <small>{(cell.weight * 100).toFixed(1)}%</small>
+                  {rankHeatmapRows.map((row) => {
+                    const cKey = CHANNEL_CF_KEY[row.channel];
+                    const rowStatus = cf.status(cKey);
+                    return (
+                      <tr
+                        key={row.channel}
+                        className={cf.cls(cKey)}
+                        style={{ cursor: cKey ? "pointer" : undefined }}
+                        onClick={() => { if (cKey) cf.select(cKey, row.channel); }}
+                      >
+                        <td>{row.channel}</td>
+                        {row.cells.map((cell) => (
+                          <td key={cell.method}>
+                            <span
+                              className={[
+                                "rank-cell",
+                                rankBand(cell.rank),
+                                cell.method === method ? "active" : "",
+                                compare === "on" && cell.method === compareMethod ? "compare" : "",
+                                rowStatus === "focus" ? "cross-focus" : rowStatus === "muted" ? "cross-muted" : "",
+                              ].filter(Boolean).join(" ")}
+                            >
+                              <b>#{cell.rank}</b>
+                              <small>{(cell.weight * 100).toFixed(1)}%</small>
+                            </span>
+                          </td>
+                        ))}
+                        <td className="r">
+                          <span className={"rank-spread " + spreadBand(row.spread)}>
+                            {row.spread}
                           </span>
                         </td>
-                      ))}
-                      <td className="r">
-                        <span className={"rank-spread " + spreadBand(row.spread)}>
-                          {row.spread}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -635,7 +669,9 @@ function RQ3Content() {
 export default function RQ3Page() {
   return (
     <Suspense fallback={<PageSkeleton />}>
-      <RQ3Content />
+      <CrossFilterProvider links={RQ3_LINKS}>
+        <RQ3Content />
+      </CrossFilterProvider>
     </Suspense>
   );
 }

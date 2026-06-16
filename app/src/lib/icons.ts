@@ -10,7 +10,6 @@ export {
   Send as IconSend,
   ArrowRight as IconArrowR,
   ArrowDown as IconArrowDown,
-  FileText as IconDoc,
   Sparkles as IconSparkle,
   ChevronDown as IconChevronDown,
 } from "lucide-react";

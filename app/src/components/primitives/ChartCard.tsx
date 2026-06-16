@@ -8,6 +8,7 @@ export function ChartCard({
   children,
   foot,
   active,
+  muted,
   onClick,
 }: {
   title: string;
@@ -17,12 +18,14 @@ export function ChartCard({
   children: ReactNode;
   foot?: ReactNode;
   active?: boolean;
+  muted?: boolean;
   onClick?: MouseEventHandler<HTMLButtonElement>;
 }) {
   const className =
     "chart-card" +
     (onClick ? " chart-card-button" : "") +
-    (active ? " active" : "");
+    (active ? " active" : "") +
+    (muted ? " cross-muted" : "");
 
   const content = (
     <>
