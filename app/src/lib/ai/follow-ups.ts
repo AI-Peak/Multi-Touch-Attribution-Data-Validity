@@ -19,7 +19,7 @@ const RULES: Array<{ keywords: RegExp; prompts: readonly [string, string] }> = [
     keywords: /sensitivity|scenario|rank|Markov|hạng/i,
     prompts: [
       "Giải thích sensitivity analysis",
-      "Tôi nên trình bày kết quả với thầy thế nào?",
+      "Tóm tắt kết luận 3 RQ",
     ],
   },
   {

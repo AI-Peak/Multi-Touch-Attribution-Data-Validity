@@ -31,5 +31,4 @@ export const VN_PROMPTS = [
   "Vì sao conversion rate 83.63% là vấn đề?",
   "Có nên dùng dataset này để chọn channel thắng không?",
   "Giải thích sensitivity analysis",
-  "Tôi nên trình bày kết quả với thầy thế nào?",
 ] as const;

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { PageHead } from "@/components/primitives/PageHead";
 import { ChatBubble } from "@/components/primitives/ChatBubble";
 import { PromptChip } from "@/components/primitives/PromptChip";
@@ -11,6 +12,85 @@ import { citationsForText } from "@/lib/ai/evidence";
 import { getFollowUps } from "@/lib/ai/follow-ups";
 
 type Message = { role: "user" | "assistant"; content: string };
+
+function renderInlineMarkdown(text: string): ReactNode[] {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, idx) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={idx}>{part.slice(2, -2)}</strong>;
+    }
+
+    return part;
+  });
+}
+
+function renderParagraph(lines: string[], key: string) {
+  return (
+    <p key={key}>
+      {lines.map((line, idx) => (
+        <Fragment key={idx}>
+          {idx > 0 ? <br /> : null}
+          {renderInlineMarkdown(line)}
+        </Fragment>
+      ))}
+    </p>
+  );
+}
+
+function renderMessageMarkdown(text: string): ReactNode[] {
+  const nodes: ReactNode[] = [];
+  let paragraphLines: string[] = [];
+  let listItems: string[] = [];
+  let listType: "ul" | "ol" | null = null;
+
+  function flushParagraph() {
+    if (paragraphLines.length === 0) return;
+    nodes.push(renderParagraph(paragraphLines, `p-${nodes.length}`));
+    paragraphLines = [];
+  }
+
+  function flushList() {
+    if (!listType || listItems.length === 0) return;
+    const Tag = listType;
+    nodes.push(
+      <Tag key={`${listType}-${nodes.length}`}>
+        {listItems.map((item, idx) => (
+          <li key={idx}>{renderInlineMarkdown(item)}</li>
+        ))}
+      </Tag>,
+    );
+    listItems = [];
+    listType = null;
+  }
+
+  for (const line of text.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      flushParagraph();
+      flushList();
+      continue;
+    }
+
+    const unordered = trimmed.match(/^[-*]\s+(.*)$/);
+    const ordered = trimmed.match(/^\d+[.)]\s+(.*)$/);
+
+    if (unordered || ordered) {
+      flushParagraph();
+      const nextListType = unordered ? "ul" : "ol";
+      if (listType !== nextListType) flushList();
+      listType = nextListType;
+      listItems.push((unordered ?? ordered)?.[1] ?? "");
+      continue;
+    }
+
+    flushList();
+    paragraphLines.push(line);
+  }
+
+  flushParagraph();
+  flushList();
+
+  return nodes;
+}
 
 const GREETING: Message = {
   role: "assistant",
@@ -117,9 +197,7 @@ export default function AssistantPage() {
         <div className="chat-scroll scroll-area" ref={scrollRef}>
           {messages.map((m, i) => (
             <ChatBubble key={i} role={m.role}>
-              {m.content.split("\n\n").map((para, pi) => (
-                <p key={pi}>{para}</p>
-              ))}
+              {renderMessageMarkdown(m.content)}
               {m.role === "assistant" ? (
                 <div className="citation-row">
                   {citationsForText(m.content).map((citation) => (
