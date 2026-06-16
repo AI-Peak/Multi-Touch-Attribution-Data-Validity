@@ -17,8 +17,6 @@ const STEPS: ReadonlyArray<{ label: string; href: Route; match: ReadonlyArray<st
 
 export function EvidencePath() {
   const pathname = usePathname();
-  if (pathname === "/presentation") return null;
-
   return (
     <div className="evidence-path" aria-label="Evidence path">
       <span className="ep-label">Evidence path</span>

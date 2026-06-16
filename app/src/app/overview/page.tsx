@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { useState } from "react";
 import { PageHead } from "@/components/primitives/PageHead";
 import { Section } from "@/components/primitives/Section";
 import { KpiCard } from "@/components/primitives/KpiCard";
 import { ChartCard } from "@/components/primitives/ChartCard";
 import { Chip } from "@/components/primitives/Chip";
+import { ResetSelection } from "@/components/primitives/ResetSelection";
 import { BarChart } from "@/components/charts/BarChart";
 import { HBarChart } from "@/components/charts/HBarChart";
 import { CHART_TOKENS } from "@/components/charts/theme";
+import { CrossFilterProvider, useCrossFilter } from "@/lib/crossfilter/context";
+import { OVERVIEW_LINKS } from "@/lib/crossfilter/links";
 import { STUDY } from "@/lib/data/constants";
 import { fmtInt, fmtPct, fmtFloat } from "@/lib/format";
 import { IconArrowR } from "@/lib/icons";
@@ -24,7 +26,7 @@ type EvidenceDetail = {
   desc: string;
   href: Route;
   cta: string;
-  metrics: ReadonlyArray<readonly [string, string, string]>;
+  metrics: ReadonlyArray<{ label: string; value: string; note: string; cfKey?: string }>;
 };
 
 const DETAILS: Record<EvidenceKey, EvidenceDetail> = {
@@ -36,9 +38,9 @@ const DETAILS: Record<EvidenceKey, EvidenceDetail> = {
     href: "/overview",
     cta: "Stay on overview",
     metrics: [
-      ["Touchpoints", fmtInt(STUDY.touchpoints), "Rows ingested by the analysis pipeline"],
-      ["Users", fmtInt(STUDY.users), "Unique journeys represented in the data"],
-      ["Pipeline refresh", STUDY.lastRefresh, "Precomputed evidence version shown in the sidebar"],
+      { label: "Touchpoints", value: fmtInt(STUDY.touchpoints), note: "Rows ingested by the analysis pipeline", cfKey: "touchpoints" },
+      { label: "Users", value: fmtInt(STUDY.users), note: "Unique journeys represented in the data", cfKey: "users" },
+      { label: "Pipeline refresh", value: STUDY.lastRefresh, note: "Precomputed evidence version shown in the sidebar" },
     ],
   },
   label: {
@@ -49,9 +51,9 @@ const DETAILS: Record<EvidenceKey, EvidenceDetail> = {
     href: "/rq1",
     cta: "Open RQ1 audit",
     metrics: [
-      ["Row-level Yes", fmtPct(STUDY.rowYesRate), "4,944 of 10,000 rows are labelled Yes"],
-      ["User any-Yes", fmtPct(STUDY.userAnyYes), "At least one Yes appears for most users"],
-      ["Gap vs 3% benchmark", "27.9x", "Observed user any-Yes rate is far above benchmark"],
+      { label: "Row-level Yes", value: fmtPct(STUDY.rowYesRate), note: "4,944 of 10,000 rows are labelled Yes", cfKey: "row-yes-rate" },
+      { label: "User any-Yes", value: fmtPct(STUDY.userAnyYes), note: "At least one Yes appears for most users", cfKey: "user-any-yes" },
+      { label: "Gap vs 3% benchmark", value: "27.9x", note: "Observed user any-Yes rate is far above benchmark" },
     ],
   },
   signal: {
@@ -62,9 +64,9 @@ const DETAILS: Record<EvidenceKey, EvidenceDetail> = {
     href: "/rq2",
     cta: "Open RQ2 diagnostics",
     metrics: [
-      ["Row-channel AUC", fmtFloat(STUDY.rowChannelAUC, 4), "Indistinguishable from chance"],
-      ["Cramer's V", fmtFloat(STUDY.cramersV, 4), "Near-zero channel association"],
-      ["Journey-length AUC", fmtFloat(STUDY.jlenAUC, 4), "Length, not channel, carries predictive signal"],
+      { label: "Row-channel AUC", value: fmtFloat(STUDY.rowChannelAUC, 4), note: "Indistinguishable from chance", cfKey: "channel-auc" },
+      { label: "Cramer's V", value: fmtFloat(STUDY.cramersV, 4), note: "Near-zero channel association", cfKey: "cramers-v" },
+      { label: "Journey-length AUC", value: fmtFloat(STUDY.jlenAUC, 4), note: "Length, not channel, carries predictive signal", cfKey: "journey-auc" },
     ],
   },
   sensitivity: {
@@ -75,9 +77,9 @@ const DETAILS: Record<EvidenceKey, EvidenceDetail> = {
     href: "/rq3",
     cta: "Open RQ3 simulator",
     metrics: [
-      ["Email share", "20.5% -> 7.1%", "Falls from as-labelled to conservative scenario"],
-      ["Markov stability", "0.43", "Moderate rank stability, not robust enough for a winner"],
-      ["Benchmark scenario", "9.2%", "Calibration shrinks the apparent channel share"],
+      { label: "Email share", value: "20.5% → 7.1%", note: "Falls from as-labelled to conservative scenario", cfKey: "scn-as-labeled" },
+      { label: "Markov stability", value: "0.43", note: "Moderate rank stability, not robust enough for a winner", cfKey: "markov-stability" },
+      { label: "Benchmark scenario", value: "9.2%", note: "Calibration shrinks the apparent channel share", cfKey: "scn-bench" },
     ],
   },
   safe: {
@@ -88,69 +90,116 @@ const DETAILS: Record<EvidenceKey, EvidenceDetail> = {
     href: "/safe",
     cta: "Open safe recommendation",
     metrics: [
-      ["Allowed claim", "Validity audit", "Use ranges, diagnostics, and limitations"],
-      ["Avoided claim", "Causal winner", "Do not optimize budget directly from this dataset"],
-      ["Presentation frame", "Conditional", "Resolve conversion-label validity before attribution"],
+      { label: "Allowed claim", value: "Validity audit", note: "Use ranges, diagnostics, and limitations" },
+      { label: "Avoided claim", value: "Causal winner", note: "Do not optimize budget directly from this dataset" },
+      { label: "Presentation frame", value: "Conditional", note: "Resolve conversion-label validity before attribution" },
     ],
   },
 };
 
-export default function OverviewPage() {
-  const [active, setActive] = useState<EvidenceKey>("label");
-  const [activeBar, setActiveBar] = useState<string | null>("User any-Yes");
+// Which EvidenceKey each cluster cfKey maps to (for drill-down switching)
+const CLUSTER_KEY_TO_EVIDENCE: Record<string, EvidenceKey> = {
+  "scope-cluster": "scope",
+  touchpoints: "scope",
+  users: "scope",
+  "label-cluster": "label",
+  "row-yes-rate": "label",
+  "user-any-yes": "label",
+  "final-touch-yes": "label",
+  "multi-yes-users": "label",
+  "pre-final-yes": "label",
+  "signal-cluster": "signal",
+  "channel-auc": "signal",
+  "journey-auc": "signal",
+  "combined-auc": "signal",
+  "cramers-v": "signal",
+  "sensitivity-cluster": "sensitivity",
+  "scn-as-labeled": "sensitivity",
+  "scn-final": "sensitivity",
+  "scn-dedup": "sensitivity",
+  "scn-droppre": "sensitivity",
+  "scn-bench": "sensitivity",
+  "scn-cons": "sensitivity",
+  "safe-cluster": "safe",
+};
+
+// Evidence key → the cfKey to select from the drill-down switcher.
+// (sensitivity has no KPI cluster, so a CLUSTERS lookup would miss it.)
+const EVIDENCE_TO_CFKEY: Record<EvidenceKey, string> = {
+  scope: "scope-cluster",
+  label: "label-cluster",
+  signal: "signal-cluster",
+  sensitivity: "sensitivity-cluster",
+  safe: "safe-cluster",
+};
+
+const CLUSTERS: ReadonlyArray<{
+  cfKey: string;
+  evidenceKey: EvidenceKey;
+  label: string;
+  kpiDefs: ReadonlyArray<{ label: string; value: string; caption?: string; valueSmall?: boolean; warn?: boolean; cfKey: string }>;
+  warn: boolean;
+}> = [
+  {
+    cfKey: "scope-cluster",
+    evidenceKey: "scope",
+    label: "Dataset scope",
+    warn: false,
+    kpiDefs: [
+      { label: "Total touchpoints", value: fmtInt(STUDY.touchpoints), caption: "rows ingested", cfKey: "touchpoints" },
+      { label: "Users", value: fmtInt(STUDY.users), caption: "unique journeys", cfKey: "users" },
+    ],
+  },
+  {
+    cfKey: "label-cluster",
+    evidenceKey: "label",
+    label: "Label saturation",
+    warn: true,
+    kpiDefs: [
+      { label: "Row-level Yes rate", value: fmtPct(STUDY.rowYesRate), caption: "4,944 / 10,000 rows", cfKey: "row-yes-rate" },
+      { label: "User any-Yes conversion", value: fmtPct(STUDY.userAnyYes), caption: "≥1 Yes per user", cfKey: "user-any-yes" },
+    ],
+  },
+  {
+    cfKey: "signal-cluster",
+    evidenceKey: "signal",
+    label: "Channel signal",
+    warn: false,
+    kpiDefs: [
+      { label: "Row-channel AUC", value: fmtFloat(STUDY.rowChannelAUC, 4), caption: "approx chance (0.50)", cfKey: "channel-auc" },
+    ],
+  },
+  {
+    cfKey: "safe-cluster",
+    evidenceKey: "safe",
+    label: "Safe conclusion",
+    warn: true,
+    kpiDefs: [
+      { label: "Main conclusion", value: "Not safe for direct attribution", valueSmall: true, warn: true, cfKey: "safe-cluster" },
+    ],
+  },
+];
+
+function OverviewContent() {
+  const cf = useCrossFilter();
+
+  // Derive active EvidenceKey from cf.selected
+  const active: EvidenceKey =
+    (cf.selected ? CLUSTER_KEY_TO_EVIDENCE[cf.selected] : null) ?? "label";
   const detail = DETAILS[active];
 
-  function focusEvidence(next: EvidenceKey, bar: string | null = null) {
-    setActive(next);
-    setActiveBar(bar);
-  }
-
-  const kpis: ReadonlyArray<{
-    label: string;
-    value: string;
-    caption?: string;
-    valueSmall?: boolean;
-    warn?: boolean;
-    evidence: EvidenceKey;
-  }> = [
-    {
-      label: "Total touchpoints",
-      value: fmtInt(STUDY.touchpoints),
-      caption: "rows ingested",
-      evidence: "scope",
-    },
-    {
-      label: "Users",
-      value: fmtInt(STUDY.users),
-      caption: "unique journeys",
-      evidence: "scope",
-    },
-    {
-      label: "Row-level Yes rate",
-      value: fmtPct(STUDY.rowYesRate),
-      caption: "4,944 / 10,000 rows",
-      evidence: "label",
-    },
-    {
-      label: "User any-Yes conversion",
-      value: fmtPct(STUDY.userAnyYes),
-      caption: ">=1 Yes per user",
-      evidence: "label",
-    },
-    {
-      label: "Row-channel AUC",
-      value: fmtFloat(STUDY.rowChannelAUC, 4),
-      caption: "approx chance (0.50)",
-      evidence: "signal",
-    },
-    {
-      label: "Main conclusion",
-      value: "Not safe for direct attribution",
-      valueSmall: true,
-      warn: true,
-      evidence: "safe",
-    },
-  ];
+  // Cross-card highlight: which diagnostic charts relate to the current selection.
+  const isFocus = (key: string) => cf.status(key) === "focus";
+  const convFocus = isFocus("row-yes-rate") || isFocus("user-any-yes") || isFocus("benchmark-3pct");
+  const labelEventFocus =
+    isFocus("row-yes-rate") || isFocus("final-touch-yes") || isFocus("multi-yes-users") || isFocus("pre-final-yes");
+  const modelFocus = isFocus("channel-auc") || isFocus("journey-auc") || isFocus("combined-auc");
+  const sensitivityFocus =
+    isFocus("scn-as-labeled") || isFocus("scn-final") || isFocus("scn-dedup") ||
+    isFocus("scn-droppre") || isFocus("scn-bench") || isFocus("scn-cons");
+  // Only recede other cards when the selection actually lights up a chart
+  // (a "dataset scope" selection hits no chart, so nothing should fade).
+  const selectionHitsCharts = convFocus || labelEventFocus || modelFocus || sensitivityFocus;
 
   return (
     <div className="page">
@@ -160,25 +209,51 @@ export default function OverviewPage() {
         desc="Summary metrics for the Multi-Touch Attribution dataset under audit. Select any KPI or diagnostic chart to inspect the evidence behind the conclusion."
       />
 
-      <div className="kpi-row">
-        {kpis.map((k) => (
-          <KpiCard
-            key={k.label}
-            label={k.label}
-            value={k.value}
-            caption={k.caption}
-            valueSmall={k.valueSmall}
-            warn={k.warn}
-            active={active === k.evidence}
-            onClick={() => focusEvidence(k.evidence, k.label)}
-          />
-        ))}
+      {/* KPI clusters */}
+      <div className="kpi-clusters">
+        {CLUSTERS.map((cluster) => {
+          const clusterStatus = cf.status(cluster.cfKey);
+          return (
+            <div
+              key={cluster.cfKey}
+              className={
+                "kpi-cluster" +
+                (cluster.warn ? " warn" : "") +
+                (clusterStatus === "focus" ? " active cross-focus" : "")
+              }
+              style={{ flex: cluster.kpiDefs.length }}
+            >
+              <div className="kpi-cluster-label">{cluster.label}</div>
+              <div className="kpi-cluster-cards">
+                {cluster.kpiDefs.map((kpi) => (
+                  <KpiCard
+                    key={kpi.label}
+                    label={kpi.label}
+                    value={kpi.value}
+                    caption={kpi.caption}
+                    valueSmall={kpi.valueSmall}
+                    warn={kpi.warn}
+                    active={cf.status(kpi.cfKey) === "focus"}
+                    onClick={() => cf.select(kpi.cfKey, kpi.label)}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
+      {/* Drill-down */}
       <Section
         title="Evidence drill-down"
         note="The selected evidence path updates from KPI and chart clicks"
-        right={<Chip kind={active === "safe" ? "high" : "neutral"}>{detail.label}</Chip>}
+        right={
+          cf.isActive ? (
+            <ResetSelection />
+          ) : (
+            <Chip kind={active === "safe" ? "high" : "neutral"}>{detail.label}</Chip>
+          )
+        }
       >
         <div className="drilldown-card">
           <div className="drilldown-copy">
@@ -190,7 +265,7 @@ export default function OverviewPage() {
                 <button
                   className={"mini-switch" + (active === key ? " active" : "")}
                   key={key}
-                  onClick={() => setActive(key as EvidenceKey)}
+                  onClick={() => cf.select(EVIDENCE_TO_CFKEY[key as EvidenceKey], item.label)}
                   type="button"
                 >
                   {item.label}
@@ -199,11 +274,14 @@ export default function OverviewPage() {
             </div>
           </div>
           <div className="drilldown-metrics">
-            {detail.metrics.map(([metric, value, note]) => (
-              <div className="drilldown-metric" key={metric}>
-                <span>{metric}</span>
-                <b className="num">{value}</b>
-                <small>{note}</small>
+            {detail.metrics.map((m) => (
+              <div
+                className={"drilldown-metric" + (cf.status(m.cfKey) === "focus" ? " cross-focus" : "")}
+                key={m.label}
+              >
+                <span>{m.label}</span>
+                <b className="num">{m.value}</b>
+                <small>{m.note}</small>
               </div>
             ))}
           </div>
@@ -211,33 +289,31 @@ export default function OverviewPage() {
             {detail.cta}
             <IconArrowR size={15} />
           </Link>
-
         </div>
       </Section>
 
-      <Section
-        title="Diagnostic panels"
-        note="Four evidence views supporting the conclusion"
-      >
+      {/* Diagnostic charts */}
+      <Section title="Diagnostic panels" note="Four evidence views supporting the conclusion">
         <div className="grid-2">
           <ChartCard
             title="Conversion rate gap"
             caption="Observed rates vs. a typical e-commerce benchmark (3%)."
             tag="RQ1"
-            active={active === "label"}
-            onClick={() => focusEvidence("label")}
+            active={convFocus}
+            muted={selectionHitsCharts && !convFocus}
+            onClick={() => cf.select("label-cluster", "Label saturation")}
           >
             <BarChart
               height={172}
               yMax={1}
               yFmt={(v) => `${Math.round(v * 100)}%`}
               threshold={{ value: 0.03, label: "3% benchmark" }}
-              activeLabel={active === "label" ? activeBar : null}
-              onDatumClick={(datum) => focusEvidence("label", datum.label)}
+              getStatus={(d) => cf.status(d.cfKey)}
+              onDatumClick={(d) => { if (d.cfKey) cf.select(d.cfKey, d.label); }}
               data={[
-                { label: "Benchmark", value: 0.03, color: CHART_TOKENS.grey },
-                { label: "Row Yes", value: STUDY.rowYesRate, warn: true },
-                { label: "User any-Yes", value: STUDY.userAnyYes, warn: true },
+                { label: "Benchmark", value: 0.03, color: CHART_TOKENS.grey, cfKey: "benchmark-3pct" },
+                { label: "Row Yes", value: STUDY.rowYesRate, warn: true, cfKey: "row-yes-rate" },
+                { label: "User any-Yes", value: STUDY.userAnyYes, warn: true, cfKey: "user-any-yes" },
               ]}
             />
           </ChartCard>
@@ -246,19 +322,20 @@ export default function OverviewPage() {
             title="Label-event audit"
             caption="Where conversion labels concentrate across the journey."
             tag="RQ2"
-            active={active === "label"}
-            onClick={() => focusEvidence("label")}
+            active={labelEventFocus}
+            muted={selectionHitsCharts && !labelEventFocus}
+            onClick={() => cf.select("label-cluster", "Label saturation")}
           >
             <HBarChart
               xMax={1}
               xFmt={(v) => `${Math.round(v * 100)}%`}
-              activeLabel={active === "label" ? activeBar : null}
-              onDatumClick={(datum) => focusEvidence("label", datum.label)}
+              getStatus={(d) => cf.status(d.cfKey)}
+              onDatumClick={(d) => { if (d.cfKey) cf.select(d.cfKey, d.label); }}
               data={[
-                { label: "Row-level Yes", value: 0.4944, warn: true },
-                { label: "Final-touch Yes", value: 0.612 },
-                { label: "Multi-Yes users", value: 0.608, warn: true },
-                { label: "Yes before final", value: 0.528, warn: true },
+                { label: "Row-level Yes", value: 0.4944, warn: true, cfKey: "row-yes-rate" },
+                { label: "Final-touch Yes", value: 0.612, cfKey: "final-touch-yes" },
+                { label: "Multi-Yes users", value: 0.608, warn: true, cfKey: "multi-yes-users" },
+                { label: "Yes before final", value: 0.528, warn: true, cfKey: "pre-final-yes" },
               ]}
             />
           </ChartCard>
@@ -267,44 +344,51 @@ export default function OverviewPage() {
             title="Model comparison"
             caption="Predictive AUC: channel signal vs. journey-length signal."
             tag="RQ2"
-            active={active === "signal"}
-            onClick={() => focusEvidence("signal")}
+            active={modelFocus}
+            muted={selectionHitsCharts && !modelFocus}
+            onClick={() => cf.select("signal-cluster", "Channel signal")}
           >
             <BarChart
               height={172}
               yMax={1}
               yFmt={(v) => v.toFixed(2)}
               threshold={{ value: 0.5, label: "chance" }}
-              activeLabel={active === "signal" ? activeBar : null}
-              onDatumClick={(datum) => focusEvidence("signal", datum.label)}
+              getStatus={(d) => cf.status(d.cfKey)}
+              onDatumClick={(d) => { if (d.cfKey) cf.select(d.cfKey, d.label); }}
               data={[
-                { label: "Channel", value: STUDY.rowChannelAUC, warn: true },
-                { label: "Journey len", value: STUDY.jlenAUC, color: CHART_TOKENS.navy },
-                { label: "Chan+len", value: STUDY.jlenChAUC, color: CHART_TOKENS.navyLight },
+                { label: "Channel", value: STUDY.rowChannelAUC, warn: true, cfKey: "channel-auc" },
+                { label: "Journey len", value: STUDY.jlenAUC, color: CHART_TOKENS.navy, cfKey: "journey-auc" },
+                { label: "Chan+len", value: STUDY.jlenChAUC, color: CHART_TOKENS.navyLight, cfKey: "combined-auc" },
               ]}
             />
           </ChartCard>
 
           <ChartCard
             title="Sensitivity stability"
-            caption="Attribution share for Email across 6 label scenarios."
+            caption="Email's attributed credit as label corrections get stricter — its share falls 21% → 7%."
             tag="RQ3"
-            active={active === "sensitivity"}
-            onClick={() => focusEvidence("sensitivity")}
+            active={sensitivityFocus}
+            muted={selectionHitsCharts && !sensitivityFocus}
+            onClick={() => cf.select("sensitivity-cluster", "Scenario sensitivity")}
           >
+            <div className="chart-legend" aria-hidden="true">
+              <span className="chart-legend-item"><i style={{ background: CHART_TOKENS.navy }} />Lenient (trust labels)</span>
+              <span className="chart-legend-item"><i style={{ background: CHART_TOKENS.navyLight }} />Moderate fix</span>
+              <span className="chart-legend-item"><i style={{ background: CHART_TOKENS.amber }} />Strict correction</span>
+            </div>
             <BarChart
-              height={172}
+              height={158}
               yMax={0.3}
               yFmt={(v) => `${Math.round(v * 100)}%`}
-              activeLabel={active === "sensitivity" ? activeBar : null}
-              onDatumClick={(datum) => focusEvidence("sensitivity", datum.label)}
+              getStatus={(d) => cf.status(d.cfKey)}
+              onDatumClick={(d) => { if (d.cfKey) cf.select(d.cfKey, d.label); }}
               data={[
-                { label: "As-lbl", value: 0.205 },
-                { label: "Final", value: 0.171 },
-                { label: "Dedup", value: 0.151, dim: true },
-                { label: "Drop-pre", value: 0.118, dim: true },
-                { label: "Bench", value: 0.092, warn: true },
-                { label: "Cons.", value: 0.071, warn: true },
+                { label: "Raw labels", value: 0.205, cfKey: "scn-as-labeled" },
+                { label: "Final-touch", value: 0.171, cfKey: "scn-final" },
+                { label: "Per user", value: 0.151, color: CHART_TOKENS.navyLight, cfKey: "scn-dedup" },
+                { label: "Drop early", value: 0.118, color: CHART_TOKENS.navyLight, cfKey: "scn-droppre" },
+                { label: "Benchmark", value: 0.092, warn: true, cfKey: "scn-bench" },
+                { label: "Conservative", value: 0.071, warn: true, cfKey: "scn-cons" },
               ]}
             />
           </ChartCard>
@@ -316,5 +400,13 @@ export default function OverviewPage() {
         diagnostic, not prescriptive; no channel is endorsed as a winner.
       </div>
     </div>
+  );
+}
+
+export default function OverviewPage() {
+  return (
+    <CrossFilterProvider links={OVERVIEW_LINKS}>
+      <OverviewContent />
+    </CrossFilterProvider>
   );
 }

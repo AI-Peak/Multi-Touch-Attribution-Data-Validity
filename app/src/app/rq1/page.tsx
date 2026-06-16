@@ -10,23 +10,18 @@ import { KpiCard } from "@/components/primitives/KpiCard";
 import { Callout } from "@/components/primitives/Callout";
 import { Chip, type ChipKind } from "@/components/primitives/Chip";
 import { SliderControl } from "@/components/primitives/SliderControl";
-import { Table, type TableCol } from "@/components/primitives/Table";
 import { LineageButton } from "@/components/primitives/LineageButton";
+import { ResetSelection } from "@/components/primitives/ResetSelection";
 import { BarChart } from "@/components/charts/BarChart";
 import { CHART_TOKENS } from "@/components/charts/theme";
+import { CrossFilterProvider, useCrossFilter } from "@/lib/crossfilter/context";
+import { RQ1_LINKS } from "@/lib/crossfilter/links";
 import { IconWarn } from "@/lib/icons";
 import { STUDY } from "@/lib/data/constants";
 import type { LineageKey } from "@/lib/data/lineage";
 
 type SignalKey = "user" | "row" | "final";
 
-type EvidenceRow = {
-  __key: string;
-  metric: React.ReactNode;
-  value: React.ReactNode;
-  detail: React.ReactNode;
-  flag: React.ReactNode;
-};
 
 const SIGNALS: Record<SignalKey, { label: string; rate: number; note: string }> = {
   user: {
@@ -102,6 +97,7 @@ function RQ1Content() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const cf = useCrossFilter();
   const [bench, setBench] = useState(() => readBenchmark(searchParams));
   const [signalKey, setSignalKey] = useState<SignalKey>(() => {
     const value = searchParams.get("signal");
@@ -123,25 +119,6 @@ function RQ1Content() {
   const band: ChipKind = gap >= 20 ? "high" : gap >= 10 ? "medium" : "low";
   const bandLabel = band === "low" ? "Low" : band === "medium" ? "Medium" : "High";
   const formula = `${observed.toFixed(2)} / ${bench.toFixed(1)} = ${gap.toFixed(1)}x`;
-
-  const cols: TableCol<EvidenceRow>[] = [
-    { key: "metric", label: "Evidence metric" },
-    { key: "value", label: "Value", align: "r" },
-    { key: "detail", label: "Interpretation" },
-    { key: "flag", label: "Concern", align: "r" },
-  ];
-
-  const rows: EvidenceRow[] = EVIDENCE.map((r) => ({
-    __key: r.metric,
-    metric: <LineageButton metricKey={r.lineage}>{r.metric}</LineageButton>,
-    value: <span className="num">{r.value}</span>,
-    detail: (
-      <span className="muted" style={{ fontSize: 12 }}>
-        {r.detail}
-      </span>
-    ),
-    flag: <Chip kind={r.flag}>{r.flagLabel}</Chip>,
-  }));
 
   return (
     <div className="page">
@@ -216,9 +193,16 @@ function RQ1Content() {
               yMax={1}
               yFmt={(v) => `${Math.round(v * 100)}%`}
               threshold={{ value: bench / 100, label: `${bench.toFixed(1)}% benchmark` }}
+              getStatus={(d) => cf.status(d.cfKey)}
+              onDatumClick={(d) => { if (d.cfKey) cf.select(d.cfKey, d.label); }}
               data={[
                 { label: "Benchmark", value: bench / 100, color: CHART_TOKENS.grey },
-                { label: selectedSignal.label, value: selectedSignal.rate, warn: true },
+                {
+                  label: selectedSignal.label,
+                  value: selectedSignal.rate,
+                  warn: true,
+                  cfKey: signalKey === "user" ? "user-any-yes" : signalKey === "row" ? "row-yes-rate" : "final-touch-yes",
+                },
               ]}
             />
           </div>
@@ -235,6 +219,8 @@ function RQ1Content() {
             label={`Observed ${selectedSignal.label} rate`}
             value={`${observed.toFixed(2)}%`}
             caption="selected signal"
+            active={cf.status(signalKey === "user" ? "user-any-yes" : "row-yes-rate") === "focus"}
+            muted={cf.status(signalKey === "user" ? "user-any-yes" : "row-yes-rate") === "muted"}
           />
           <KpiCard
             label="Selected benchmark threshold"
@@ -262,9 +248,34 @@ function RQ1Content() {
       <Section
         title="Label-validity evidence"
         note="Four checks on where and how the Yes label fires"
+        right={<ResetSelection />}
       >
         <div className="card">
-          <Table cols={cols} rows={rows} />
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>Evidence metric</th>
+                <th className="r">Value</th>
+                <th>Interpretation</th>
+                <th className="r">Concern</th>
+              </tr>
+            </thead>
+            <tbody>
+              {EVIDENCE.map((r) => (
+                <tr
+                  key={r.metric}
+                  className={cf.cls(r.lineage)}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => cf.select(r.lineage, r.metric)}
+                >
+                  <td><LineageButton metricKey={r.lineage}>{r.metric}</LineageButton></td>
+                  <td className="r"><span className="num">{r.value}</span></td>
+                  <td><span className="muted" style={{ fontSize: 12 }}>{r.detail}</span></td>
+                  <td className="r"><Chip kind={r.flag}>{r.flagLabel}</Chip></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </Section>
 
@@ -288,7 +299,9 @@ function RQ1Content() {
 export default function RQ1Page() {
   return (
     <Suspense fallback={<PageSkeleton />}>
-      <RQ1Content />
+      <CrossFilterProvider links={RQ1_LINKS}>
+        <RQ1Content />
+      </CrossFilterProvider>
     </Suspense>
   );
 }

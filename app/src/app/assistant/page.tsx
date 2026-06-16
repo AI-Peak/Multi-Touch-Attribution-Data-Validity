@@ -8,6 +8,7 @@ import { PromptChip } from "@/components/primitives/PromptChip";
 import { IconInfo, IconSend } from "@/lib/icons";
 import { VN_PROMPTS } from "@/lib/ai/system-instruction";
 import { citationsForText } from "@/lib/ai/evidence";
+import { getFollowUps } from "@/lib/ai/follow-ups";
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -135,6 +136,20 @@ export default function AssistantPage() {
               ) : null}
             </ChatBubble>
           ))}
+          {(() => {
+            const last = messages[messages.length - 1];
+            const showFollowUps = !thinking && last?.role === "assistant" && messages.length > 1;
+            if (!showFollowUps) return null;
+            const followUps = getFollowUps(last.content);
+            return (
+              <div className="follow-up-chips">
+                <span className="follow-up-label">Suggested follow-ups</span>
+                {followUps.map((p) => (
+                  <PromptChip key={p} onClick={() => send(p)}>{p}</PromptChip>
+                ))}
+              </div>
+            );
+          })()}
           {thinking ? (
             <ChatBubble role="assistant">
               <span style={{ color: "var(--ink-3)", fontStyle: "italic" }}>

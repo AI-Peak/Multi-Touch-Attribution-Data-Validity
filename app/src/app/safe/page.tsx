@@ -7,7 +7,6 @@ import { PageHead } from "@/components/primitives/PageHead";
 import { Section } from "@/components/primitives/Section";
 import { Callout } from "@/components/primitives/Callout";
 import { Chip } from "@/components/primitives/Chip";
-import { EvidenceActions } from "@/components/primitives/EvidenceActions";
 import { IconArrowR, IconCheck, IconWarn, IconX } from "@/lib/icons";
 
 type Step = {
@@ -98,20 +97,11 @@ const CHECKLIST: ReadonlyArray<ChecklistItem> = [
   { id: "row-label", kind: "dont", text: "Do not use the row-level label for individual attribution" },
 ];
 
-const WORDING = {
-  slide:
-    "This dataset is suitable for a validity audit and sensitivity demonstration, but not for direct causal budget allocation. The conversion label is saturated, channel signal is weak, and rankings change under plausible label corrections.",
-  report:
-    "Downstream attribution claims should be framed as conditional on resolving conversion-label validity. Based on the current evidence, the analysis supports diagnostic reporting and sensitivity ranges, not channel-winner or budget-optimization recommendations.",
-} as const;
-
 export default function SafePage() {
   const [activeStepId, setActiveStepId] = useState(STEPS[1]!.id);
   const [checked, setChecked] = useState<ReadonlySet<string>>(
     () => new Set(["audit", "suspect", "winner"]),
   );
-  const [wordingMode, setWordingMode] = useState<keyof typeof WORDING>("slide");
-
   const activeStep = useMemo(
     () => STEPS.find((step) => step.id === activeStepId) ?? STEPS[0]!,
     [activeStepId],
@@ -241,33 +231,6 @@ export default function SafePage() {
           </div>
         </div>
       </div>
-
-      <Section title="Presentation wording">
-        <div className="wording-card card card-pad">
-          <div className="segmented">
-            <button
-              className={wordingMode === "slide" ? "active" : ""}
-              onClick={() => setWordingMode("slide")}
-              type="button"
-            >
-              Slide
-            </button>
-            <button
-              className={wordingMode === "report" ? "active" : ""}
-              onClick={() => setWordingMode("report")}
-              type="button"
-            >
-              Report
-            </button>
-          </div>
-          <p>{WORDING[wordingMode]}</p>
-          <EvidenceActions
-            copyText={WORDING[wordingMode]}
-            downloadText={WORDING[wordingMode]}
-            filename={`safe-${wordingMode}-wording.txt`}
-          />
-        </div>
-      </Section>
 
       <div style={{ marginTop: 20 }}>
         <Callout variant="info" title="Bottom line">

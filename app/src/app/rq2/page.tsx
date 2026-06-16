@@ -4,7 +4,6 @@ import {
   Suspense,
   cloneElement,
   isValidElement,
-  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -23,10 +22,13 @@ import { Tabs } from "@/components/primitives/Tabs";
 import { Chip, type ChipKind } from "@/components/primitives/Chip";
 import { KpiCard } from "@/components/primitives/KpiCard";
 import { LineageButton } from "@/components/primitives/LineageButton";
-import { BarChart } from "@/components/charts/BarChart";
-import { HBarChart } from "@/components/charts/HBarChart";
-import { GroupedBar } from "@/components/charts/GroupedBar";
+import { ResetSelection } from "@/components/primitives/ResetSelection";
+import { BarChart, type BarDatum } from "@/components/charts/BarChart";
+import { HBarChart, type HBarDatum } from "@/components/charts/HBarChart";
+import { GroupedBar, type GroupedBarGroup } from "@/components/charts/GroupedBar";
 import { CHART_TOKENS } from "@/components/charts/theme";
+import { CrossFilterProvider, useCrossFilter, type CFStatus } from "@/lib/crossfilter/context";
+import { RQ2_LINKS } from "@/lib/crossfilter/links";
 import { STUDY } from "@/lib/data/constants";
 import type { LineageKey } from "@/lib/data/lineage";
 
@@ -46,7 +48,6 @@ type LensPanel = {
 type DiagnosticView = {
   id: ViewId;
   tab: string;
-  selectLabel: string;
   panels: Record<LensId, LensPanel>;
 };
 
@@ -182,68 +183,69 @@ function lineageForMetric(metric: string): LineageKey {
   return "threshold-lab";
 }
 
-type InteractiveDatum = { label: string };
+// Exact label → cfKey lookup (replaces fragile keyword matching)
+const DATUM_CF_KEY: Record<string, string> = {
+  "Cramer's V": "cramers-v",
+  "Channel AUC": "channel-auc",
+  "Chance line": "channel-auc",
+  "Channel R2": "mcfadden-channel",
+  "Journey length R2": "mcfadden-length",
+  "Row Yes": "row-yes-rate",
+  "User any-Yes": "user-any-yes",
+  "Final-touch Yes": "final-touch-yes",
+  "Multi-Yes users": "multi-yes-users",
+  "Yes before final": "pre-final-yes",
+  "Email": "ch-email",
+  "Search": "ch-search",
+  "Direct": "ch-direct",
+  "Referral": "ch-referral",
+  "Social": "ch-social",
+  "Display": "ch-display",
+  "Linear stability": "markov-stability",
+  "Markov stability": "markov-stability",
+  "Row-weight stability": "markov-stability",
+  "Last-touch stability": "markov-stability",
+  "Raw labels": "scn-as-labeled",
+  "Final-touch": "scn-final",
+  "Per user": "scn-dedup",
+  "Drop early": "scn-droppre",
+  "Benchmark": "scn-bench",
+  "Conservative": "scn-cons",
+  "Channel only": "channel-auc",
+  "Length only": "journey-auc",
+  "Channel + length": "combined-auc",
+  "Channel": "channel-auc",
+  "Journey length": "journey-auc",
+  "Combined": "combined-auc",
+  "Length R2": "mcfadden-length",
+  "Residual channel gain": "mcfadden-channel",
+  "Added channel": "combined-auc",
+};
+
+function cfKey(label: string): string | undefined {
+  return DATUM_CF_KEY[label];
+}
 
 function withInteractiveChart(
   chart: ReactNode,
-  onDatumClick: (datum: InteractiveDatum) => void,
-  activeLabel: string | null,
+  getStatus: (label: string) => CFStatus,
+  onDatumClick: (label: string) => void,
 ): ReactNode {
   if (!isValidElement(chart)) return chart;
-
   const element = chart as ReactElement<Record<string, unknown>>;
   if (element.type === BarChart || element.type === HBarChart) {
-    return cloneElement(element, { activeLabel, onDatumClick });
+    return cloneElement(element, {
+      getStatus: (d: BarDatum | HBarDatum) => getStatus(d.label),
+      onDatumClick: (d: BarDatum | HBarDatum) => onDatumClick(d.label),
+    });
   }
   if (element.type === GroupedBar) {
-    return cloneElement(element, { activeLabel, onGroupClick: onDatumClick });
+    return cloneElement(element, {
+      getGroupStatus: (g: GroupedBarGroup) => getStatus(g.label),
+      onGroupClick: (g: GroupedBarGroup) => onDatumClick(g.label),
+    });
   }
   return chart;
-}
-
-function normalizeFocusText(value: string) {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-}
-
-function focusAliases(label: string) {
-  const key = normalizeFocusText(label);
-  if (key.includes("channel length") || key.includes("chan len") || key.includes("combined")) {
-    return ["combined", "channel length", "channel + length", "added channel"];
-  }
-  if (key.includes("channel") && key.includes("auc")) {
-    return ["row channel auc", "channel auc", "channel only auc", "auc"];
-  }
-  if (key.includes("channel only")) {
-    return ["row channel auc", "channel only auc", "channel auc"];
-  }
-  if (key.includes("channel") && (key.includes("r2") || key.includes("fit"))) {
-    return ["channel mcfadden", "channel r2", "channel fit"];
-  }
-  if (key === "channel") return ["row channel auc", "channel auc", "channel mcfadden", "channel r2"];
-  if (key.includes("journey") || key.includes("length")) return ["journey", "length"];
-  if (key.includes("row weight")) return ["row weight", "stability"];
-  if (key.includes("last touch")) return ["last touch", "spearman", "stability"];
-  if (key.includes("first touch")) return ["first touch", "spearman", "stability"];
-  if (key.includes("markov")) return ["markov", "stability", "spearman"];
-  if (key.includes("cramer")) return ["cramer"];
-  if (key.includes("chi square")) return ["chi square"];
-  if (key.includes("yes") || key.includes("multi")) return ["yes", "label", "multi"];
-  if (key.includes("final")) return ["final", "label"];
-  if (key.includes("bench")) return ["bench", "benchmark"];
-  if (key.includes("cons")) return ["cons", "conservative"];
-  return [key];
-}
-
-function matchesFocus(text: string, activeLabel: string | null) {
-  if (!activeLabel) return false;
-  const haystack = normalizeFocusText(text);
-  const aliases = focusAliases(activeLabel).map(normalizeFocusText).filter(Boolean);
-  return aliases.some((alias) => haystack.includes(alias) || alias.includes(haystack));
-}
-
-function crossFilterClass(text: string, activeLabel: string | null) {
-  if (!activeLabel) return "";
-  return matchesFocus(text, activeLabel) ? " cross-focus" : " cross-muted";
 }
 
 const labelRiskRows: ReadonlyArray<EvidenceRow> = [
@@ -278,7 +280,6 @@ const diagnosticViews: ReadonlyArray<DiagnosticView> = [
   {
     id: "channel",
     tab: "Channel signal test",
-    selectLabel: "Channel signal",
     panels: {
       signal: {
         chart: (
@@ -353,7 +354,6 @@ const diagnosticViews: ReadonlyArray<DiagnosticView> = [
   {
     id: "logistic",
     tab: "Logistic regression comparison",
-    selectLabel: "Logistic comparison",
     panels: {
       signal: {
         chart: (
@@ -431,7 +431,6 @@ const diagnosticViews: ReadonlyArray<DiagnosticView> = [
   {
     id: "journey",
     tab: "Journey-length confounding",
-    selectLabel: "Journey length confounding",
     panels: {
       signal: {
         chart: (
@@ -510,7 +509,6 @@ const diagnosticViews: ReadonlyArray<DiagnosticView> = [
   {
     id: "markov",
     tab: "Markov removal effect",
-    selectLabel: "Markov removal effect",
     panels: {
       signal: {
         chart: (
@@ -579,12 +577,12 @@ const diagnosticViews: ReadonlyArray<DiagnosticView> = [
             yMax={0.3}
             yFmt={(v) => `${Math.round(v * 100)}%`}
             data={[
-              { label: "As-lbl", value: 0.205 },
-              { label: "Final", value: 0.171 },
-              { label: "Dedup", value: 0.151, dim: true },
-              { label: "Drop-pre", value: 0.118, dim: true },
-              { label: "Bench", value: 0.092, warn: true },
-              { label: "Cons.", value: 0.071, warn: true },
+              { label: "Raw labels", value: 0.205 },
+              { label: "Final-touch", value: 0.171 },
+              { label: "Per user", value: 0.151, dim: true },
+              { label: "Drop early", value: 0.118, dim: true },
+              { label: "Benchmark", value: 0.092, warn: true },
+              { label: "Conservative", value: 0.071, warn: true },
             ]}
           />
         ),
@@ -612,6 +610,8 @@ function RQ2Content() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const cf = useCrossFilter();
+
   const [lens, setLens] = useState<LensId>(() => {
     const value = searchParams.get("lens");
     return isLensId(value) ? value : "signal";
@@ -625,64 +625,6 @@ function RQ2Content() {
     const value = searchParams.get("profile");
     return isThresholdProfileId(value) ? value : "channel";
   });
-  const [activeDatumLabel, setActiveDatumLabel] = useState<string | null>(null);
-
-  const applyCrossFilter = useCallback((datum: InteractiveDatum) => {
-    const label = datum.label;
-    const key = label.toLowerCase();
-    setActiveDatumLabel(label);
-
-    if (
-      key.includes("yes") ||
-      key.includes("multi") ||
-      key.includes("dedup") ||
-      key.includes("drop-pre") ||
-      key.includes("bench") ||
-      key.includes("cons") ||
-      key === "as-lbl" ||
-      key === "final"
-    ) {
-      setLens("label");
-      if (key === "final" || key.includes("dedup") || key.includes("drop-pre") || key.includes("bench") || key.includes("cons") || key === "as-lbl") {
-        setViewId("markov");
-      }
-      return;
-    }
-
-    if (
-      key.includes("markov") ||
-      key.includes("spearman") ||
-      key.includes("last-touch") ||
-      key.includes("first-touch") ||
-      key.includes("linear") ||
-      key.includes("row-weight") ||
-      ["email", "search", "direct", "referral", "social", "display"].includes(key)
-    ) {
-      setViewId("markov");
-      setLens(key.includes("stability") || key.includes("spearman") || key.includes("last-touch") || key.includes("first-touch") || key.includes("linear") || key.includes("row-weight") ? "fit" : "signal");
-      return;
-    }
-
-    if (key.includes("combined") || key.includes("channel + length") || key.includes("chan+len") || key.includes("added")) {
-      setViewId("logistic");
-      setThresholdProfileId("combined");
-      setLens(key.includes("r2") || key.includes("fit") || key.includes("value") ? "fit" : "signal");
-      return;
-    }
-
-    if (key.includes("journey") || key.includes("length")) {
-      setViewId("journey");
-      setThresholdProfileId("journey");
-      setLens(key.includes("r2") || key.includes("fit") ? "fit" : "signal");
-      return;
-    }
-
-    if (key.includes("channel") || key.includes("cramer") || key.includes("chi-square") || key.includes("chance")) {
-      setViewId("channel");
-      setThresholdProfileId("channel");
-      setLens(key.includes("r2") || key.includes("fit") ? "fit" : "signal");
-    }
-  }, []);
 
   useEffect(() => {
     const thresholdValue = threshold.toFixed(2);
@@ -710,9 +652,15 @@ function RQ2Content() {
   const thresholdProfile = THRESHOLD_PROFILES.find((item) => item.id === thresholdProfileId) ?? THRESHOLD_PROFILES[0]!;
   const thresholdStats = computeThresholdStats(thresholdProfile, threshold);
   const thresholdBand: ChipKind = thresholdProfileId === "channel" ? "high" : "medium";
+
   const interactiveChart = useMemo(
-    () => withInteractiveChart(panel.chart, applyCrossFilter, activeDatumLabel),
-    [activeDatumLabel, applyCrossFilter, panel.chart],
+    () => withInteractiveChart(
+      panel.chart,
+      (label) => cf.status(cfKey(label)),
+      (label) => { const k = cfKey(label); if (k) cf.select(k, label); },
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [panel.chart, cf.selected],
   );
 
   return (
@@ -724,21 +672,16 @@ function RQ2Content() {
       />
 
       <Section title="View controls">
-        <div className="card card-pad control-grid">
-          <Select
-            label="Diagnostic lens"
-            value={lens}
-            onChange={(value) => setLens(value as LensId)}
-            hint={lensMeta.hint}
-            options={LENSES.map((item) => ({ value: item.id, label: item.label }))}
-          />
-          <Select
-            label="Diagnostic view"
-            value={viewId}
-            onChange={(value) => setViewId(value as ViewId)}
-            hint="Matches the active diagnostic tab."
-            options={diagnosticViews.map((item) => ({ value: item.id, label: item.selectLabel }))}
-          />
+        <div className="card card-pad">
+          <div style={{ maxWidth: 300 }}>
+            <Select
+              label="Diagnostic lens"
+              value={lens}
+              onChange={(value) => setLens(value as LensId)}
+              hint={lensMeta.hint}
+              options={LENSES.map((item) => ({ value: item.id, label: item.label }))}
+            />
+          </div>
         </div>
         <div className="share-link-hint">
           Shareable demo state: <span className="mono">/rq2?lens={lens}&amp;view={viewId}&amp;threshold={threshold.toFixed(2)}&amp;profile={thresholdProfileId}</span>
@@ -747,7 +690,7 @@ function RQ2Content() {
 
       <Section
         title="Diagnostic evidence"
-        right={activeDatumLabel ? <Chip kind="neutral">{activeDatumLabel}</Chip> : null}
+        right={<ResetSelection />}
       >
         <Tabs
           tabs={diagnosticViews.map((item) => item.tab)}
@@ -773,7 +716,7 @@ function RQ2Content() {
               <div className="evidence-badges">
                 {panel.badges.map((badge) => (
                   <div
-                    className={`evidence-badge${crossFilterClass(`${badge.label} ${badge.value}`, activeDatumLabel)}`}
+                    className={`evidence-badge${cf.cls(cfKey(badge.label))}`}
                     key={`${badge.label}-${badge.value}`}
                   >
                     <span>{badge.label}</span>
@@ -790,24 +733,29 @@ function RQ2Content() {
                   </tr>
                 </thead>
                 <tbody>
-                  {panel.table.map((row) => (
-                    <tr
-                      className={crossFilterClass(`${row[0]} ${row[1]} ${row[2]}`, activeDatumLabel)}
-                      key={`${view.id}-${lens}-${row[0]}`}
-                    >
-                      <td>
-                        <LineageButton metricKey={lineageForMetric(row[0])}>{row[0]}</LineageButton>
-                      </td>
-                      <td className="r">
-                        <span className="num">{row[1]}</span>
-                      </td>
-                      <td>
-                        <span className="muted" style={{ fontSize: 11.5 }}>
-                          {row[2]}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                  {panel.table.map((row) => {
+                    const rowCfKey = cfKey(row[0]) ?? lineageForMetric(row[0]);
+                    return (
+                      <tr
+                        className={cf.cls(rowCfKey)}
+                        key={`${view.id}-${lens}-${row[0]}`}
+                        style={{ cursor: "pointer" }}
+                        onClick={() => cf.select(rowCfKey, row[0])}
+                      >
+                        <td>
+                          <LineageButton metricKey={lineageForMetric(row[0])}>{row[0]}</LineageButton>
+                        </td>
+                        <td className="r">
+                          <span className="num">{row[1]}</span>
+                        </td>
+                        <td>
+                          <span className="muted" style={{ fontSize: 11.5 }}>
+                            {row[2]}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -818,7 +766,7 @@ function RQ2Content() {
       <div style={{ marginTop: 18 }}>
         <Callout
           variant="info"
-          title={`Interpretation - ${view.tab}${activeDatumLabel ? ` / ${activeDatumLabel}` : ""}`}
+          title={`Interpretation - ${view.tab}`}
         >
           <span>
             {panel.interp}{" "}
@@ -830,7 +778,7 @@ function RQ2Content() {
       </div>
       <Section
         title="Threshold lab"
-        note={activeDatumLabel ? `Filtered by ${activeDatumLabel}; threshold profile is ${thresholdProfile.label}.` : "Move the decision cutoff to show why channel-only signal is not a useful classifier"}
+        note="Move the decision cutoff to show why channel-only signal is not a useful classifier"
       >
         <div className="threshold-lab card card-pad">
           <div className="threshold-controls">
@@ -943,7 +891,9 @@ function RQ2Content() {
 export default function RQ2Page() {
   return (
     <Suspense fallback={<PageSkeleton />}>
-      <RQ2Content />
+      <CrossFilterProvider links={RQ2_LINKS}>
+        <RQ2Content />
+      </CrossFilterProvider>
     </Suspense>
   );
 }
