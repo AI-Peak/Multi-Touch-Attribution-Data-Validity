@@ -1,0 +1,13 @@
+split,n_samples,n_converted,n_not_converted,conversion_rate,model
+Train,7000,3461,3539,0.49442857142857144,row_channel
+Validation,1500,741,759,0.494,row_channel
+Test,1500,742,758,0.49466666666666664,row_channel
+Train,1992,1666,326,0.8363453815261044,user_any_channel
+Validation,427,357,70,0.8360655737704918,user_any_channel
+Test,428,358,70,0.8364485981308412,user_any_channel
+Train,1992,1666,326,0.8363453815261044,journey_length_only
+Validation,427,357,70,0.8360655737704918,journey_length_only
+Test,428,358,70,0.8364485981308412,journey_length_only
+Train,1992,1666,326,0.8363453815261044,channel_plus_length
+Validation,427,357,70,0.8360655737704918,channel_plus_length
+Test,428,358,70,0.8364485981308412,channel_plus_length
