@@ -1,5 +1,5 @@
-model,n_obs,n_train,n_valid,n_test,positive_rate_pct,pseudo_r2_mcfadden,auc_test
-row_channel,10000,7000,1500,1500,49.44,0.000187,0.482445
-user_any_channel,2847,1992,427,428,83.631893,0.172002,0.64996
-journey_length_only,2847,1992,427,428,83.631893,0.188325,0.685694
-channel_plus_length,2847,1992,427,428,83.631893,0.196043,0.683121
+model,n_obs,n_train,n_test,positive_rate_pct,pseudo_r2_mcfadden,auc_test
+row_channel,10000,7000,1500,49.44,0.000187,0.482445
+user_any_channel,2847,1992,428,83.631893,0.172002,0.64996
+journey_length_only,2847,1992,428,83.631893,0.188325,0.685694
+channel_plus_length,2847,1992,428,83.631893,0.196043,0.683121
