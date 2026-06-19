@@ -106,17 +106,13 @@ export function BarChart({
               label={(props: { viewBox?: { x: number; y: number; width: number; height: number } }) => {
                 const vb = props.viewBox;
                 if (!vb) return <g />;
-                // A low threshold sits near the x-axis, where its label collides with
-                // the category ticks. Lift it to the top-left of the plot instead.
-                const ratio = yMax ? threshold.value / yMax : 0;
-                const lift = ratio < 0.5;
-                const x = lift ? vb.x + 6 : vb.x + vb.width - 6;
-                const y = lift ? 25 : vb.y - 6;
+                const x = vb.x + vb.width - 6;
+                const y = Math.max(12, vb.y - 8);
                 return (
                   <text
                     x={x}
                     y={y}
-                    textAnchor={lift ? "start" : "end"}
+                    textAnchor="end"
                     style={{
                       fontFamily: "var(--font-mono)",
                       fontSize: 10,
