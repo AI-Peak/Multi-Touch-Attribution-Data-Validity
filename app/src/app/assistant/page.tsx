@@ -7,7 +7,7 @@ import { PageHead } from "@/components/primitives/PageHead";
 import { ChatBubble } from "@/components/primitives/ChatBubble";
 import { PromptChip } from "@/components/primitives/PromptChip";
 import { IconInfo, IconSend } from "@/lib/icons";
-import { VN_PROMPTS } from "@/lib/ai/system-instruction";
+import { ASSISTANT_PROMPTS } from "@/lib/ai/system-instruction";
 import { citationsForText } from "@/lib/ai/evidence";
 import { getFollowUps } from "@/lib/ai/follow-ups";
 
@@ -95,7 +95,7 @@ function renderMessageMarkdown(text: string): ReactNode[] {
 const GREETING: Message = {
   role: "assistant",
   content:
-    "Hello — I'm the project research assistant. I answer strictly from this study's precomputed evidence about the MTA dataset's validity.\n\nAsk about the three research questions, the 83.63% label issue, or how to present the findings.",
+    "Hello, I'm MTA Assistant. I answer strictly from this study's precomputed evidence about the MTA dataset's validity.\n\nAsk about the three research questions, the 83.63% label issue, or how to present the findings.",
 };
 
 export default function AssistantPage() {
@@ -180,7 +180,7 @@ export default function AssistantPage() {
       }}
     >
       <PageHead
-        eyebrow="AI Research Assistant"
+        eyebrow="MTA Assistant"
         title="Ask the evidence"
         desc="A grounded assistant for interrogating the validity findings. It does not browse the web or invent numbers."
       />
@@ -189,7 +189,8 @@ export default function AssistantPage() {
         <IconInfo size={15} />
         <span>
           Powered by Gemini when configured; otherwise uses an offline evidence
-          fallback. Citation chips link back to project pages.
+          fallback. Answers in English by default, and in Vietnamese when asked
+          in Vietnamese. Citation chips link back to project pages.
         </span>
       </div>
 
@@ -254,7 +255,7 @@ export default function AssistantPage() {
 
         <div style={{ paddingTop: 14 }}>
           <div className="prompt-chips">
-            {VN_PROMPTS.map((p) => (
+            {ASSISTANT_PROMPTS.map((p) => (
               <PromptChip key={p} onClick={() => send(p)}>
                 {p}
               </PromptChip>
