@@ -307,11 +307,17 @@ function OverviewContent() {
               height={172}
               yMax={1}
               yFmt={(v) => `${Math.round(v * 100)}%`}
-              threshold={{ value: 0.03, label: "3% benchmark" }}
+              xAxisPadding={{ left: 64, right: 64 }}
+              threshold={{
+                value: 0.03,
+                label: "3% benchmark",
+                color: CHART_TOKENS.navy,
+                labelPosition: "start",
+              }}
               getStatus={(d) => cf.status(d.cfKey)}
               onDatumClick={(d) => { if (d.cfKey) cf.select(d.cfKey, d.label); }}
               data={[
-                { label: "Benchmark", value: 0.03, color: CHART_TOKENS.grey, cfKey: "benchmark-3pct" },
+                { label: "Benchmark", value: 0.03, color: CHART_TOKENS.navy, cfKey: "benchmark-3pct" },
                 { label: "Row Yes", value: STUDY.rowYesRate, warn: true, cfKey: "row-yes-rate" },
                 { label: "User any-Yes", value: STUDY.userAnyYes, warn: true, cfKey: "user-any-yes" },
               ]}
