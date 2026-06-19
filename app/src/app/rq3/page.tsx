@@ -526,6 +526,20 @@ function RQ3Content() {
             </div>
             <div className="rank-heatmap-scroll">
               <table className="rank-heatmap">
+                <colgroup>
+                  <col className="rank-channel-col" />
+                  {METHODS.map((methodName) => (
+                    <col
+                      className={
+                        methodName === "Row conversion rate weighted"
+                          ? "rank-method-col rank-method-col-weighted"
+                          : "rank-method-col"
+                      }
+                      key={methodName}
+                    />
+                  ))}
+                  <col className="rank-spread-col" />
+                </colgroup>
                 <thead>
                   <tr>
                     <th>Channel</th>
