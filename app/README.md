@@ -13,7 +13,7 @@ Six pages, one per research view:
 2. **RQ1 Validity Audit** — Slider-driven benchmark comparison and label-validity evidence table.
 3. **RQ2 Model Diagnostics** — Statistical tests, logistic-regression comparison, journey-length confounding, Markov removal effect.
 4. **RQ3 Interactive Simulator** — What-if budget allocation with a stability badge. Channels re-rank with a FLIP animation when the attribution method changes — that animation is the paper's headline finding made tangible.
-5. **AI Assistant ("Ask the evidence")** — Gemini-grounded Q&A constrained to project evidence. Vietnamese by default.
+5. **MTA Assistant ("Ask the evidence")** — Gemini-grounded Q&A constrained to project evidence. English by default; Vietnamese when the user asks in Vietnamese.
 6. **Safe Recommendation** — A defensible workflow and a do / do-not checklist.
 
 ## Data flow
@@ -77,7 +77,7 @@ GEMINI_MODEL=gemini-2.5-flash-lite
 
 Get a key at <https://aistudio.google.com/apikey>.
 
-Without a key, every page still works; only the AI Assistant returns an inline
+Without a key, every page still works; only MTA Assistant returns an inline
 "missing key" notice.
 
 ## Design system

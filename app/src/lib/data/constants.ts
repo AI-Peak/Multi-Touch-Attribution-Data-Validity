@@ -6,7 +6,7 @@ export const PAGES = [
   { id: "rq2", idx: "03", label: "RQ2 · Diagnostics", href: "/rq2", tag: null },
   { id: "rq3", idx: "04", label: "RQ3 · Simulator", href: "/rq3", tag: null },
   { id: "safe", idx: "05", label: "Safe Recommendation", href: "/safe", tag: null },
-  { id: "assistant", idx: "06", label: "AI Assistant", href: "/assistant", tag: "beta" },
+  { id: "assistant", idx: "06", label: "MTA Assistant", href: "/assistant", tag: "beta" },
 ] as const;
 
 export type PageId = (typeof PAGES)[number]["id"];

@@ -1,32 +1,32 @@
-import { VN_PROMPTS } from "./system-instruction";
+import { ASSISTANT_PROMPTS } from "./system-instruction";
 
 const RULES: Array<{ keywords: RegExp; prompts: readonly [string, string] }> = [
   {
-    keywords: /83\.63|label|conversion rate|nhãn/i,
+    keywords: /83\.63|label|conversion rate|nhan|nhãn/i,
     prompts: [
-      "Vì sao conversion rate 83.63% là vấn đề?",
-      "Có nên dùng dataset này để chọn channel thắng không?",
+      "Why is the 83.63% conversion rate a problem?",
+      "Should this dataset choose a winning channel?",
     ],
   },
   {
-    keywords: /AUC|channel signal|channel-only|kênh/i,
+    keywords: /AUC|channel signal|channel-only|kenh|kênh/i,
     prompts: [
-      "Có nên dùng dataset này để chọn channel thắng không?",
-      "Giải thích sensitivity analysis",
+      "Should this dataset choose a winning channel?",
+      "Explain the sensitivity analysis",
     ],
   },
   {
-    keywords: /sensitivity|scenario|rank|Markov|hạng/i,
+    keywords: /sensitivity|scenario|rank|Markov|hang|hạng/i,
     prompts: [
-      "Giải thích sensitivity analysis",
-      "Tôi nên trình bày kết quả với thầy thế nào?",
+      "Explain the sensitivity analysis",
+      "Summarize the three RQ conclusions",
     ],
   },
   {
-    keywords: /trình bày|present|thầy|giảng viên|defend/i,
+    keywords: /trinh bay|trình bày|present|thay|thầy|giang vien|giảng viên|defend/i,
     prompts: [
-      "Tóm tắt kết luận 3 RQ",
-      "Giải thích sensitivity analysis",
+      "Summarize the three RQ conclusions",
+      "Explain the sensitivity analysis",
     ],
   },
 ];
@@ -35,5 +35,5 @@ export function getFollowUps(reply: string): readonly [string, string] {
   for (const rule of RULES) {
     if (rule.keywords.test(reply)) return rule.prompts;
   }
-  return [VN_PROMPTS[0]!, VN_PROMPTS[3]!];
+  return [ASSISTANT_PROMPTS[0]!, ASSISTANT_PROMPTS[3]!];
 }
