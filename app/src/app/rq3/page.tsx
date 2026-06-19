@@ -452,7 +452,7 @@ function RQ3Content() {
                   <th>Channel</th>
                   <th className="r">Weight</th>
                   <th className="r">Allocation</th>
-                  <th className="r">Est. conv.</th>
+                  <th className="r">Est. conversions</th>
                 </tr>
               </thead>
               <LayoutGroup>
