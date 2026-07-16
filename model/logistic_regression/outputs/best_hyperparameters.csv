@@ -1,5 +1,0 @@
-model,best_C,best_validation_auc,test_auc,test_accuracy,test_precision,test_recall,test_f1
-row_channel,0.01,0.497827,0.482445,0.502667,0.492424,0.175202,0.258449
-user_any_channel,0.01,0.793958,0.648923,0.836449,0.836449,1.0,0.910941
-journey_length_only,0.01,0.82531,0.685694,0.836449,0.836449,1.0,0.910941
-channel_plus_length,0.1,0.826431,0.685874,0.838785,0.84323,0.99162,0.911425

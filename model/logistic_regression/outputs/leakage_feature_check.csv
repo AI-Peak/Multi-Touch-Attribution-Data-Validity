@@ -1,0 +1,55 @@
+feature_name,leakage_status,reason,model_attempting,handling_action
+n_touchpoints,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+n_unique_channels,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+journey_duration_hours,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+repeat_touchpoint_count,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+repeat_touchpoint_ratio,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+mean_time_between_touchpoints,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+median_time_between_touchpoints,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+max_time_gap,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+n_channel_transitions,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+n_unique_transitions,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+channel_switch_rate,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+journey_entropy,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+first_touch_channel,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+last_touch_channel,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+second_touch_channel,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+penultimate_touch_channel,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+first_touch_campaign,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+last_touch_campaign,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+most_frequent_channel,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+prop_touchpoints_first_half,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+prop_touchpoints_second_half,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+n_consecutive_same,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+n_consecutive_diff,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+prop_paid_to_organic,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+prop_organic_to_paid,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+first_last_same,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+first_touch_repeated,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+converted_any_yes,Leakage,Directly contains target or target-derived information,None,Excluded from predictor variables
+count_direct_traffic,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+count_display_ads,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+count_email,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+count_referral,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+count_search_ads,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+count_social_media,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+prop_direct_traffic,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+prop_display_ads,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+prop_email,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+prop_referral,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+prop_search_ads,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+prop_social_media,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+count_first_half_direct_traffic,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+count_first_half_display_ads,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+count_first_half_email,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+count_first_half_referral,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+count_first_half_search_ads,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+count_first_half_social_media,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+count_second_half_direct_traffic,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+count_second_half_display_ads,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+count_second_half_email,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+count_second_half_referral,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+count_second_half_search_ads,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+count_second_half_social_media,Safe,Calculated strictly prior to target outcome,enhanced_journey_logistic,Allowed
+conversion,Leakage,Directly contains target or target-derived information,None,Excluded from predictor variables
+is_conversion,Leakage,Directly contains target or target-derived information,None,Excluded from predictor variables

@@ -5,37 +5,37 @@
         "model": "row_channel",
         "n_obs": 10000,
         "n_train": 7000,
-        "n_test": 3000,
+        "n_test": 1500,
         "positive_rate_pct": 49.44,
         "pseudo_r2_mcfadden": 0.000187,
-        "auc_test": 0.49018
+        "auc_test": 0.482445
       },
       {
         "model": "user_any_channel",
         "n_obs": 2847,
         "n_train": 1992,
-        "n_test": 855,
+        "n_test": 428,
         "positive_rate_pct": 83.631893,
         "pseudo_r2_mcfadden": 0.172002,
-        "auc_test": 0.721513
+        "auc_test": 0.64996
       },
       {
         "model": "journey_length_only",
         "n_obs": 2847,
         "n_train": 1992,
-        "n_test": 855,
+        "n_test": 428,
         "positive_rate_pct": 83.631893,
         "pseudo_r2_mcfadden": 0.188325,
-        "auc_test": 0.75488
+        "auc_test": 0.685694
       },
       {
         "model": "channel_plus_length",
         "n_obs": 2847,
         "n_train": 1992,
-        "n_test": 855,
+        "n_test": 428,
         "positive_rate_pct": 83.631893,
         "pseudo_r2_mcfadden": 0.196043,
-        "auc_test": 0.753551
+        "auc_test": 0.683121
       }
     ],
     "coefficients": [
