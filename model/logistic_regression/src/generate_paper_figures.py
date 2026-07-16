@@ -70,28 +70,28 @@ def validate_metrics_consistency():
     comparisons = pd.read_csv(OUTPUT_DIR / "statistical_model_comparisons.csv")
     
     # 1. Check journey_length_only AUC matches
-    auc_cv_len = cv_metrics[cv_metrics["model"] == "journey_length_only"]["mean_roc_auc"].values[0]
+    auc_cv_len = cv_metrics[cv_metrics["model"] == "journey_length_only"]["mean_fold_roc_auc"].values[0]
     auc_abl_len = ablation[ablation["feature_set"] == "journey_length_only"]["mean_cv_roc_auc"].values[0]
     assert abs(auc_cv_len - auc_abl_len) < 1e-5, f"Mismatch in journey_length_only AUC: CV={auc_cv_len}, Ablation={auc_abl_len}"
     
     # 2. Check channel_plus_length AUC matches
-    auc_cv_plus = cv_metrics[cv_metrics["model"] == "channel_plus_length"]["mean_roc_auc"].values[0]
+    auc_cv_plus = cv_metrics[cv_metrics["model"] == "channel_plus_length"]["mean_fold_roc_auc"].values[0]
     auc_abl_plus = ablation[ablation["feature_set"] == "channel_presence_plus_length"]["mean_cv_roc_auc"].values[0]
     assert abs(auc_cv_plus - auc_abl_plus) < 1e-5, f"Mismatch in channel_plus_length AUC: CV={auc_cv_plus}, Ablation={auc_abl_plus}"
     
     # 3. Check enhanced model AUC matches
-    auc_cv_enh = cv_metrics[cv_metrics["model"] == "enhanced_journey_logistic"]["mean_roc_auc"].values[0]
+    auc_cv_enh = cv_metrics[cv_metrics["model"] == "enhanced_journey_logistic"]["mean_fold_roc_auc"].values[0]
     auc_abl_enh = ablation[ablation["feature_set"] == "full_enhanced_features"]["mean_cv_roc_auc"].values[0]
     assert abs(auc_cv_enh - auc_abl_enh) < 1e-5, f"Mismatch in enhanced model AUC: CV={auc_cv_enh}, Ablation={auc_abl_enh}"
     
     # 4. Check statistical comparisons difference matches ablation incremental AUC
-    diff_stat_plus = comparisons[comparisons["comparison"] == "channel_plus_length_vs_journey_length_only"]["mean_difference"].values[0]
+    diff_stat_plus = comparisons[comparisons["comparison_id"] == "channel_plus_length_vs_journey_length_only"]["paired_oof_delta_auc"].values[0]
     diff_calc_plus = ablation[ablation["feature_set"] == "channel_presence_plus_length"]["incremental_auc_over_length_only"].values[0]
     assert abs(diff_stat_plus - diff_calc_plus) < 1e-5, f"Mismatch in statistical comparison difference for plus: stat={diff_stat_plus}, calc={diff_calc_plus}"
     
     # 5. Check CI consistency for incremental AUC in ablation results
     ci_lower_inc_plus = ablation[ablation["feature_set"] == "channel_presence_plus_length"]["ci_lower_incremental_auc"].values[0]
-    ci_lower_stat_plus = comparisons[comparisons["comparison"] == "channel_plus_length_vs_journey_length_only"]["ci_lower_95"].values[0]
+    ci_lower_stat_plus = comparisons[comparisons["comparison_id"] == "channel_plus_length_vs_journey_length_only"]["paired_oof_ci_lower"].values[0]
     assert abs(ci_lower_inc_plus - ci_lower_stat_plus) < 1e-5, f"Mismatch in incremental AUC CI lower: ablation={ci_lower_inc_plus}, stat={ci_lower_stat_plus}"
     
     print("All consistency checks passed successfully.")
@@ -185,12 +185,12 @@ def plot_cv_performance_forest():
     y_pos = np.arange(len(metrics))
     
     # Calculate error bars
-    err_low = metrics["mean_roc_auc"] - metrics["ci_lower_95"]
-    err_high = metrics["ci_upper_95"] - metrics["mean_roc_auc"]
+    err_low = metrics["oof_roc_auc"] - metrics["oof_roc_auc_ci_lower"]
+    err_high = metrics["oof_roc_auc_ci_upper"] - metrics["oof_roc_auc"]
     
     ax.errorbar(
-        metrics["mean_roc_auc"], y_pos, xerr=[err_low, err_high], 
-        fmt='o', color='#1f77b4', elinewidth=1.5, capsize=3, label="Mean CV ROC-AUC"
+        metrics["oof_roc_auc"], y_pos, xerr=[err_low, err_high], 
+        fmt='o', color='#1f77b4', elinewidth=1.5, capsize=3, label="Aggregated OOF ROC-AUC"
     )
     
     ax.set_yticks(y_pos)
@@ -199,9 +199,18 @@ def plot_cv_performance_forest():
     ax.set_title("Model Comparison: 5-Fold Repeated CV (50 Folds)")
     
     # Draw vertical line representing the journey length baseline
-    base_auc = metrics[metrics["model"] == "journey_length_only"]["mean_roc_auc"].values[0]
+    base_auc = metrics[metrics["model"] == "journey_length_only"]["oof_roc_auc"].values[0]
     ax.axvline(base_auc, color='gray', linestyle='--', alpha=0.7, label="Journey Length Baseline")
     ax.legend(loc="lower left")
+    
+    # Add caption text below the plot
+    fig.text(
+        0.5, -0.08, 
+        "Points represent ROC-AUC calculated from aggregated out-of-fold\n"
+        "predictions. Error bars show 95% user-level bootstrap confidence\n"
+        "intervals.",
+        ha="center", fontsize=8, style="italic", wrap=True
+    )
     
     plt.savefig(IMAGE_DIR / "04_cv_performance_forest.png", dpi=300, bbox_inches="tight", facecolor="white")
     plt.close()
@@ -216,26 +225,26 @@ def plot_feature_ablation():
         "channel_counts_only", "journey_structure_only", "full_enhanced_features"
     ]
     ablation = ablation.set_index("feature_set").loc[keep_sets].reset_index()
-    ablation = ablation.sort_values(by="mean_cv_roc_auc")
+    ablation = ablation.sort_values(by="oof_roc_auc")
     
     fig, ax = plt.subplots(figsize=(7.5, 4))
     y_pos = np.arange(len(ablation))
     
-    err_low = ablation["mean_cv_roc_auc"] - ablation["ci_lower_95"]
-    err_high = ablation["ci_upper_95"] - ablation["mean_cv_roc_auc"]
+    err_low = ablation["oof_roc_auc"] - ablation["oof_ci_lower_95"]
+    err_high = ablation["oof_ci_upper_95"] - ablation["oof_roc_auc"]
     
     ax.errorbar(
-        ablation["mean_cv_roc_auc"], y_pos, xerr=[err_low, err_high], 
+        ablation["oof_roc_auc"], y_pos, xerr=[err_low, err_high], 
         fmt='o', color='#2ca02c', elinewidth=1.5, capsize=3
     )
     
     ax.set_yticks(y_pos)
     ax.set_yticklabels([ABLATION_SET_DISPLAY_NAMES.get(s, s) for s in ablation["feature_set"]])
-    ax.set_xlabel("Mean CV ROC-AUC")
+    ax.set_xlabel("Out-of-Fold (OOF) ROC-AUC")
     ax.set_title("Feature Ablation Study (50 Folds)")
     
     # Draw reference line at journey length only
-    len_auc = ablation[ablation["feature_set"] == "journey_length_only"]["mean_cv_roc_auc"].values[0]
+    len_auc = ablation[ablation["feature_set"] == "journey_length_only"]["oof_roc_auc"].values[0]
     ax.axvline(len_auc, color='red', linestyle='--', alpha=0.6, label="Journey Length Only")
     ax.legend(loc="lower right")
     
@@ -244,45 +253,57 @@ def plot_feature_ablation():
 
 # --- 06. Incremental AUC over Journey Length ---
 def plot_incremental_auc():
-    ablation = pd.read_csv(OUTPUT_DIR / "feature_ablation_results.csv")
     comparisons = pd.read_csv(OUTPUT_DIR / "statistical_model_comparisons.csv")
     
-    # Keep the groups except journey_length_only itself
-    keep_sets = [
-        "channel_presence_only", "channel_presence_plus_length",
-        "channel_counts_only", "journey_structure_only", "full_enhanced_features"
-    ]
-    ablation = ablation.set_index("feature_set").loc[keep_sets].reset_index()
-    ablation = ablation.sort_values(by="incremental_auc_over_length_only")
+    # Sort comparisons for plotting
+    comparisons = comparisons.sort_values(by="paired_oof_delta_auc")
     
-    fig, ax = plt.subplots(figsize=(8, 4))
-    y_pos = np.arange(len(ablation))
+    fig, ax = plt.subplots(figsize=(8, 3.5))
+    y_pos = np.arange(len(comparisons))
     
     # Plotted error bars are computed from the paired user-level bootstrap
-    err_low = ablation["incremental_auc_over_length_only"] - ablation["ci_lower_incremental_auc"]
-    err_high = ablation["ci_upper_incremental_auc"] - ablation["incremental_auc_over_length_only"]
+    err_low = comparisons["paired_oof_delta_auc"] - comparisons["paired_oof_ci_lower"]
+    err_high = comparisons["paired_oof_ci_upper"] - comparisons["paired_oof_delta_auc"]
     
     ax.errorbar(
-        ablation["incremental_auc_over_length_only"], y_pos, xerr=[err_low, err_high], 
+        comparisons["paired_oof_delta_auc"], y_pos, xerr=[err_low, err_high], 
         fmt='o', color='#C94C4C', elinewidth=1.5, capsize=3
     )
     
+    # Map comparison_id to display labels dynamically
+    yticklabels = []
+    for idx, row in comparisons.iterrows():
+        m_a_disp = MODEL_DISPLAY_NAMES.get(row["model_a"], row["model_a"])
+        m_b_disp = MODEL_DISPLAY_NAMES.get(row["model_b"], row["model_b"])
+        yticklabels.append(f"{m_a_disp}\nvs. {m_b_disp}")
+        
     ax.set_yticks(y_pos)
-    ax.set_yticklabels([ABLATION_SET_DISPLAY_NAMES.get(s, s) for s in ablation["feature_set"]])
-    ax.set_xlabel("Incremental ROC-AUC (Model - Journey Length Only)")
-    ax.set_title("Incremental Predictive Value over Journey Length Only")
+    ax.set_yticklabels(yticklabels)
+    ax.set_xlabel("Paired OOF ΔAUC")
+    ax.set_title("Incremental Predictive Value (Paired comparisons on OOF Predictions)")
     ax.axvline(0.0, color='gray', linestyle='--')
     
-    # Annotate that the improvement is statistically detectable but practically negligible
-    ax.text(
-        0.005, len(ablation) - 1.2, 
-        "Statistically detectable but\npractically negligible improvement\n(Max delta ≈ 0.0037 ROC-AUC)", 
-        fontsize=9, color="#555555", style="italic", bbox=dict(facecolor='white', alpha=0.8, edgecolor='none')
+    # Annotate absolute differences
+    for idx, row in comparisons.reset_index(drop=True).iterrows():
+        ax.text(
+            row["paired_oof_delta_auc"], idx + 0.15,
+            f"Δ = {row['paired_oof_delta_auc']:.4f}\n95% CI: [{row['paired_oof_ci_lower']:.4f}, {row['paired_oof_ci_upper']:.4f}]",
+            fontsize=8, ha="center", color="#333333"
+        )
+        
+    # Caption annotation
+    fig.text(
+        0.5, -0.15,
+        "Points show paired differences in ROC-AUC calculated from one\n"
+        "aggregated out-of-fold prediction per user. Error bars show 95%\n"
+        "percentile bootstrap confidence intervals obtained by resampling users.",
+        ha="center", fontsize=8, style="italic", wrap=True
     )
     
-    # Double check plotted CI values match comparisons CSV for channel_presence_plus_length
-    ci_stat_low = comparisons[comparisons["comparison"] == "channel_plus_length_vs_journey_length_only"]["ci_lower_95"].values[0]
-    ci_stat_high = comparisons[comparisons["comparison"] == "channel_plus_length_vs_journey_length_only"]["ci_upper_95"].values[0]
+    # Consistency double check plotted CI values match comparisons CSV
+    ablation = pd.read_csv(OUTPUT_DIR / "feature_ablation_results.csv")
+    ci_stat_low = comparisons[comparisons["comparison_id"] == "channel_plus_length_vs_journey_length_only"]["paired_oof_ci_lower"].values[0]
+    ci_stat_high = comparisons[comparisons["comparison_id"] == "channel_plus_length_vs_journey_length_only"]["paired_oof_ci_upper"].values[0]
     ci_plot_low = ablation[ablation["feature_set"] == "channel_presence_plus_length"]["ci_lower_incremental_auc"].values[0]
     ci_plot_high = ablation[ablation["feature_set"] == "channel_presence_plus_length"]["ci_upper_incremental_auc"].values[0]
     
@@ -319,23 +340,17 @@ def plot_calibration_curves():
 
 # --- 08. Logistic Odds Ratios ---
 def plot_logistic_odds_ratios():
-    odds_ratios = pd.read_csv(OUTPUT_DIR / "enhanced_logistic_odds_ratios.csv")
+    odds_ratios = pd.read_csv(OUTPUT_DIR / "explanatory_logistic_odds_ratios.csv")
     
     # Exclude intercept
-    odds_ratios = odds_ratios[odds_ratios["term"] != "intercept"]
-    
-    # Sort and take top 12 most significant features by absolute z score or effect size
-    # Let's sort by odds_ratio distance from 1.0 (effect size)
-    odds_ratios["effect_size"] = np.abs(odds_ratios["coef"])
-    odds_ratios = odds_ratios.sort_values(by="effect_size", ascending=False).head(12)
+    odds_ratios = odds_ratios[odds_ratios["feature"] != "intercept"]
     odds_ratios = odds_ratios.sort_values(by="odds_ratio")
     
     fig, ax = plt.subplots(figsize=(8, 4.5))
     y_pos = np.arange(len(odds_ratios))
     
-    # Calculate Odds Ratio CIs
-    err_low = odds_ratios["odds_ratio"] - odds_ratios["or_ci_lower"]
-    err_high = odds_ratios["or_ci_upper"] - odds_ratios["odds_ratio"]
+    err_low = odds_ratios["odds_ratio"] - odds_ratios["ci_lower_95"]
+    err_high = odds_ratios["ci_upper_95"] - odds_ratios["odds_ratio"]
     
     ax.errorbar(
         odds_ratios["odds_ratio"], y_pos, xerr=[err_low, err_high], 
@@ -343,18 +358,31 @@ def plot_logistic_odds_ratios():
     )
     
     # Style features names nicely
-    clean_terms = []
-    for t in odds_ratios["term"]:
-        # Strip OHE suffixes
-        clean_t = t.replace("num__", "").replace("cat__", "")
-        clean_terms.append(clean_t)
+    display_names = {
+        "n_touchpoints": "Journey Length (n_touchpoints)",
+        "has_direct_traffic": "Direct Traffic Presence",
+        "has_display_ads": "Display Ads Presence",
+        "has_email": "Email Presence",
+        "has_referral": "Referral Presence",
+        "has_search_ads": "Search Ads Presence",
+        "has_social_media": "Social Media Presence"
+    }
+    clean_terms = [display_names.get(f, f) for f in odds_ratios["feature"]]
         
     ax.set_yticks(y_pos)
     ax.set_yticklabels(clean_terms)
-    ax.set_xlabel("Odds Ratio (95% CI)")
-    ax.set_title("Top 12 Features by Logistic Odds Ratio (Log Scale)")
+    ax.set_xlabel("Odds Ratio (95% CI, Log Scale)")
+    ax.set_title("Explanatory Logistic Regression Odds Ratios")
     ax.axvline(1.0, color='red', linestyle='--')
     ax.set_xscale("log")
+    
+    # Annotation stating it is association only
+    fig.text(
+        0.5, -0.08,
+        "Note: Odds Ratios reflect statistical association in a retrospective diagnostic model,\n"
+        "and do NOT represent causal effects.",
+        ha="center", fontsize=8.5, style="italic", color="#555555"
+    )
     
     plt.savefig(IMAGE_DIR / "08_logistic_odds_ratios.png", dpi=300, bbox_inches="tight", facecolor="white")
     plt.close()
@@ -396,6 +424,57 @@ def clean_obsolete_images():
         f.unlink()
         print(f"Deleted legacy PNG: {f.name}")
 
+# --- 09. Markov Removal Effects ---
+def plot_markov_removal_effects():
+    removal = pd.read_csv(PROJECT_ROOT / "model" / "markov_chain" / "outputs" / "rq2_markov_removal_effects.csv")
+    
+    # Sort channels by absolute removal effect
+    removal = removal.sort_values(by="absolute_removal_effect")
+    
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    y_pos = np.arange(len(removal))
+    
+    ax.barh(y_pos, removal["absolute_removal_effect"], color="#4F81BD")
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(removal["channel"])
+    ax.set_xlabel("Absolute Removal Effect")
+    ax.set_title("Markov Chain Channel Removal Effects")
+    ax.axvline(0.0, color='gray', linestyle='--')
+    
+    # Annotate absolute and relative effects on the bars
+    for idx, row in removal.reset_index(drop=True).iterrows():
+        abs_eff = row["absolute_removal_effect"]
+        rel_eff = row["relative_removal_effect"]
+        
+        # Position label based on sign of effect
+        if abs_eff >= 0:
+            x_pos = abs_eff + 0.005
+            ha = "left"
+        else:
+            x_pos = abs_eff - 0.005
+            ha = "right"
+            
+        ax.text(
+            x_pos, idx,
+            f"Abs: {abs_eff:.4f}\nRel: {rel_eff * 100.0:+.1f}%",
+            va="center", ha=ha, fontsize=8
+        )
+        
+    # Set x-limits with some margin for text annotations
+    min_x = min(0.0, removal["absolute_removal_effect"].min())
+    max_x = max(0.0, removal["absolute_removal_effect"].max())
+    ax.set_xlim(min_x - 0.05, max_x + 0.05)
+    
+    # Add caption stating Markov removal effects are model-based diagnostic quantities, not causal effects
+    fig.text(
+        0.5, -0.08,
+        "Note: Markov removal effects are model-based diagnostic quantities, and do NOT represent causal effects.",
+        ha="center", fontsize=8.5, style="italic", color="#555555"
+    )
+    
+    plt.savefig(IMAGE_DIR / "09_markov_removal_effects.png", dpi=300, bbox_inches="tight", facecolor="white")
+    plt.close()
+
 def main():
     IMAGE_DIR.mkdir(parents=True, exist_ok=True)
     
@@ -426,8 +505,11 @@ def main():
     print("Generating Figure 8: 08_logistic_odds_ratios.png...")
     plot_logistic_odds_ratios()
     
+    print("Generating Figure 9: 09_markov_removal_effects.png...")
+    plot_markov_removal_effects()
+    
     clean_obsolete_images()
-    print("Figure generation complete. All 8 figures successfully written in root 'image/' directory.")
+    print("Figure generation complete. All 9 figures successfully written in root 'image/' directory.")
 
 if __name__ == "__main__":
     main()

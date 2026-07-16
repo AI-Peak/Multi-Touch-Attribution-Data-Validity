@@ -298,49 +298,55 @@
         "channel": "Direct Traffic",
         "baseline_conversion_probability": 0.836319,
         "probability_without_channel": 0.836429,
-        "removal_effect": -0.00011,
-        "positive_removal_effect": 0.0,
-        "markov_positive_share_pct": 0.0
+        "absolute_removal_effect": -0.00011,
+        "relative_removal_effect": -0.000132,
+        "positive_absolute_effect": 0.0,
+        "positive_normalized_share_pct": 0.0
       },
       {
         "channel": "Display Ads",
         "baseline_conversion_probability": 0.836319,
         "probability_without_channel": 0.835871,
-        "removal_effect": 0.000448,
-        "positive_removal_effect": 0.000448,
-        "markov_positive_share_pct": 76.056414
+        "absolute_removal_effect": 0.000448,
+        "relative_removal_effect": 0.000535,
+        "positive_absolute_effect": 0.000448,
+        "positive_normalized_share_pct": 76.056414
       },
       {
         "channel": "Email",
         "baseline_conversion_probability": 0.836319,
         "probability_without_channel": 0.836506,
-        "removal_effect": -0.000187,
-        "positive_removal_effect": 0.0,
-        "markov_positive_share_pct": 0.0
+        "absolute_removal_effect": -0.000187,
+        "relative_removal_effect": -0.000224,
+        "positive_absolute_effect": 0.0,
+        "positive_normalized_share_pct": 0.0
       },
       {
         "channel": "Referral",
         "baseline_conversion_probability": 0.836319,
         "probability_without_channel": 0.836178,
-        "removal_effect": 0.000141,
-        "positive_removal_effect": 0.000141,
-        "markov_positive_share_pct": 23.943586
+        "absolute_removal_effect": 0.000141,
+        "relative_removal_effect": 0.000168,
+        "positive_absolute_effect": 0.000141,
+        "positive_normalized_share_pct": 23.943586
       },
       {
         "channel": "Search Ads",
         "baseline_conversion_probability": 0.836319,
         "probability_without_channel": 0.836556,
-        "removal_effect": -0.000237,
-        "positive_removal_effect": 0.0,
-        "markov_positive_share_pct": 0.0
+        "absolute_removal_effect": -0.000237,
+        "relative_removal_effect": -0.000283,
+        "positive_absolute_effect": 0.0,
+        "positive_normalized_share_pct": 0.0
       },
       {
         "channel": "Social Media",
         "baseline_conversion_probability": 0.836319,
         "probability_without_channel": 0.83632,
-        "removal_effect": -1e-06,
-        "positive_removal_effect": 0.0,
-        "markov_positive_share_pct": 0.0
+        "absolute_removal_effect": -1e-06,
+        "relative_removal_effect": -1e-06,
+        "positive_absolute_effect": 0.0,
+        "positive_normalized_share_pct": 0.0
       }
     ],
     "attribution_share": [

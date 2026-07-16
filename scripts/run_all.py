@@ -17,6 +17,7 @@ from analysis_sql.run_sql_pipeline import run as run_sql_pipeline  # noqa: E402
 from app.scripts.prepare_app_data import main as prepare_app_data  # noqa: E402
 from model.logistic_regression.src.train_logistic_models import run as run_logistic_models  # noqa: E402
 from model.markov_chain.src.build_markov_model import run as run_markov_model  # noqa: E402
+from model.logistic_regression.src.generate_paper_figures import main as generate_paper_figures_main  # noqa: E402
 
 
 FINAL_TABLES = PROJECT_ROOT / "outputs" / "tables"
@@ -137,6 +138,7 @@ def main() -> None:
     rq3_sensitivity_analysis_run()
     print("7/8 Visualization")
     visualization_run()
+    generate_paper_figures_main()
     print("8/8 App data JSON scaffold")
     prepare_app_data()
     aggregate_final_outputs()

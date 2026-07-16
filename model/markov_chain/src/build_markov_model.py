@@ -54,6 +54,20 @@ def _remove_channel(P: pd.DataFrame, channel: str) -> pd.DataFrame:
 
 def run() -> dict[str, pd.DataFrame]:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    
+    # Cleanup double-prefixed files in outputs folder if they exist
+    double_prefixes = [
+        "rq2_markov_markov_attribution_share.csv",
+        "rq2_markov_markov_removal_effects.csv",
+        "rq2_markov_markov_transition_counts.csv",
+        "rq2_markov_markov_transition_matrix.csv"
+    ]
+    for filename in double_prefixes:
+        p = OUTPUT_DIR / filename
+        if p.exists():
+            p.unlink()
+            print(f"Deleted obsolete Markov double-prefixed CSV file: {p.name}")
+            
     journeys = _read_sql_output("rq123_journey_features")
     states = ["START"] + CHANNELS + ["CONVERSION", "NULL"]
     counts = pd.DataFrame(0.0, index=states, columns=states)
@@ -73,20 +87,36 @@ def run() -> dict[str, pd.DataFrame]:
     for channel in CHANNELS:
         without = _remove_channel(transition, channel)
         prob_without = _conversion_absorption_probability(without)
+        abs_effect = baseline - prob_without
+        rel_effect = abs_effect / baseline if baseline > 0 else 0.0
+        
         rows.append(
             {
                 "channel": channel,
                 "baseline_conversion_probability": baseline,
                 "probability_without_channel": prob_without,
-                "removal_effect": baseline - prob_without,
+                "absolute_removal_effect": abs_effect,
+                "relative_removal_effect": rel_effect,
             }
         )
 
     removal = pd.DataFrame(rows)
-    positive = removal["removal_effect"].clip(lower=0)
-    removal["positive_removal_effect"] = positive
-    removal["markov_positive_share_pct"] = np.where(positive.sum() > 0, positive / positive.sum() * 100.0, 0.0)
-    markov_share = removal[["channel", "markov_positive_share_pct", "removal_effect", "positive_removal_effect"]].copy()
+    removal["positive_absolute_effect"] = removal["absolute_removal_effect"].clip(lower=0.0)
+    
+    pos_sum = removal["positive_absolute_effect"].sum()
+    removal["positive_normalized_share_pct"] = np.where(
+        pos_sum > 0, 
+        removal["positive_absolute_effect"] / pos_sum * 100.0, 
+        0.0
+    )
+    
+    # Compatibility output for Web UI: rq2_markov_attribution_share.csv
+    markov_share = pd.DataFrame({
+        "channel": removal["channel"],
+        "markov_positive_share_pct": removal["positive_normalized_share_pct"],
+        "removal_effect": removal["absolute_removal_effect"],
+        "positive_removal_effect": removal["positive_absolute_effect"]
+    })
 
     transition.round(6).to_csv(OUTPUT_DIR / "rq2_markov_transition_matrix.csv", index=True)
     removal.round(6).to_csv(OUTPUT_DIR / "rq2_markov_removal_effects.csv", index=False)

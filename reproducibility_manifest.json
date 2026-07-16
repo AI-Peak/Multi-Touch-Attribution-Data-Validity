@@ -1,0 +1,9 @@
+{
+  "python_version": "3.13.12",
+  "random_seed": 42,
+  "cv_folds": 5,
+  "cv_repeats": 10,
+  "bootstrap_iterations": 5000,
+  "modeling_scope": "retrospective_diagnostic",
+  "generated_at": "2026-07-16T23:03:00Z"
+}
